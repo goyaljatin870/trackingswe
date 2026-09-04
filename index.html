@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProjectPulse — Project Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <!-- ========== LOADING OVERLAY ========== -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h2>ProjectPulse</h2>
+            <p>Connecting to database...</p>
+        </div>
+    </div>
+
+    <!-- ========== LOGIN / REGISTER SCREEN ========== -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-container login-container-single">
+            <div class="login-logo">
+                <i class="fas fa-rocket"></i>
+                <h1>ProjectPulse</h1>
+                <p>Project Progress Tracker</p>
+            </div>
+
+            <!-- Auth Box with Tabs -->
+            <div class="auth-box">
+                <div class="auth-tabs">
+                    <button type="button" class="auth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button type="button" class="auth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">
+                        <i class="fas fa-user-plus"></i> Member Register
+                    </button>
+                </div>
+
+                <!-- Login Form -->
+                <div class="auth-panel" id="loginPanel">
+                    <div class="auth-panel-header">
+                        <h3>Welcome Back</h3>
+                        <p>Sign in using your User ID and Password</p>
+                    </div>
+                    <form onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label>User ID <span class="req">*</span></label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="loginUserId" required placeholder="e.g. admin or aarav" autocomplete="username">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Password <span class="req">*</span></label>
+                            <div class="input-with-icon password-input">
+                                <i class="fas fa-lock input-icon"></i>
+                                <input type="password" id="loginPassword" required placeholder="Enter password" autocomplete="current-password">
+                                <button type="button" class="toggle-pass" onclick="togglePassword('loginPassword', this)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="login-error" id="loginError"></div>
+                        <button type="submit" class="btn btn-primary btn-full btn-lg">
+                            <i class="fas fa-sign-in-alt"></i> Sign In
+                        </button>
+                    </form>
+
+                    <div class="auth-divider"><span>OR</span></div>
+
+                    <button type="button" class="btn btn-secondary btn-full" onclick="loginAsPublic()">
+                        <i class="fas fa-eye"></i> Continue as Public Viewer
+                    </button>
+
+                    <div class="credentials-hint">
+                        <div class="hint-title"><i class="fas fa-key"></i> Quick Login Credentials:</div>
+                        <div class="hint-list">
+                            <div><strong>Admin:</strong> <code>admin</code> / <code>admin123</code></div>
+                            <div><strong>Sample Member:</strong> <code>aarav</code> / <code>aarav123</code> (or <code>priya</code> / <code>priya123</code>)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Register Form -->
+                <div class="auth-panel" id="registerPanel" style="display: none;">
+                    <div class="auth-panel-header">
+                        <h3>Team Member Registration</h3>
+                        <p>Register yourself to log work progress</p>
+                    </div>
+                    <form onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label>Full Name <span class="req">*</span></label>
+                            <input type="text" id="regName" required placeholder="e.g. Rahul Sharma">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Roll No. <span class="req">*</span></label>
+                                <input type="text" id="regRollNo" required placeholder="e.g. 21CS107">
+                            </div>
+                            <div class="form-group">
+                                <label>Mobile No. <span class="req">*</span></label>
+                                <input type="tel" id="regMobile" required placeholder="e.g. 9876543210" pattern="[0-9]{10}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Gmail <span class="req">*</span></label>
+                            <input type="email" id="regGmail" required placeholder="e.g. rahul@gmail.com">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Create User ID <span class="req">*</span></label>
+                                <input type="text" id="regUserId" required placeholder="e.g. rahul" minlength="3">
+                            </div>
+                            <div class="form-group">
+                                <label>Create Password <span class="req">*</span></label>
+                                <div class="password-input">
+                                    <input type="password" id="regPassword" required placeholder="Min 4 chars" minlength="4">
+                                    <button type="button" class="toggle-pass" onclick="togglePassword('regPassword', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="login-error" id="registerError"></div>
+                        <button type="submit" class="btn btn-primary btn-full btn-lg">
+                            <i class="fas fa-user-plus"></i> Register & Login
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MAIN APP ========== -->
+    <div class="app-wrapper" id="appWrapper" style="display:none;">
+
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-rocket"></i>
+                    <span>ProjectPulse</span>
+                </div>
+            </div>
+            <div class="user-badge" id="userBadge">
+                <div class="user-badge-avatar" id="userBadgeAvatar"></div>
+                <div class="user-badge-info">
+                    <span class="user-badge-name" id="userBadgeName">Admin</span>
+                    <span class="user-badge-role" id="userBadgeRole">Administrator</span>
+                </div>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <!-- Populated by JS based on role -->
+            </ul>
+            <div class="sidebar-footer">
+                <div class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i><span>Dark Mode</span>
+                </div>
+                <div class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="mobile-toggle" id="mobileToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="topbar-right">
+                    <div class="connection-badge connected" id="connectionBadge" title="Database connected">
+                        <span class="connection-dot"></span>
+                        <span class="connection-text">Live</span>
+                    </div>
+                    <div class="role-chip" id="roleChip">Admin</div>
+                </div>
+            </header>
+
+            <!-- ===== Dashboard ===== -->
+            <section class="content-section active" id="section-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card" style="--accent:#6366f1">
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statMembers">0</span>
+                            <span class="stat-label">Team Members</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="--accent:#10b981">
+                        <div class="stat-icon"><i class="fas fa-clipboard-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statEntries">0</span>
+                            <span class="stat-label">Work Entries</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="--accent:#f59e0b">
+                        <div class="stat-icon"><i class="fas fa-calendar-week"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statCurrentWeek">0</span>
+                            <span class="stat-label">Current Week</span>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="--accent:#8b5cf6">
+                        <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="statProgress">0%</span>
+                            <span class="stat-label">Overall Progress</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-history"></i> Recent Work Entries</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list" id="recentEntries">
+                                <p class="empty-state">No entries yet</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fas fa-users"></i> Team Overview</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="team-mini-list" id="teamMiniList"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== Team Members Section ===== -->
+            <section class="content-section" id="section-team">
+                <div class="section-header">
+                    <h2>Team Members</h2>
+                    <button class="btn btn-primary admin-only" id="addMemberBtn" onclick="openModal('memberModal')">
+                        <i class="fas fa-plus"></i> Add Member
+                    </button>
+                </div>
+                <div class="team-grid" id="teamGrid"></div>
+            </section>
+
+            <!-- ===== Work Progress Section ===== -->
+            <section class="content-section" id="section-progress">
+                <div class="section-header">
+                    <h2>Work Progress</h2>
+                    <div class="header-actions">
+                        <select id="progressWeekFilter" class="select-input" onchange="renderWorkProgress()">
+                            <option value="all">All Weeks</option>
+                        </select>
+                        <button class="btn btn-primary member-or-admin" id="addProgressBtn" onclick="openAddProgress()">
+                            <i class="fas fa-plus"></i> Add Progress
+                        </button>
+                    </div>
+                </div>
+                <div class="progress-entries" id="progressEntries">
+                    <p class="empty-state">No work progress entries yet</p>
+                </div>
+            </section>
+
+            <!-- ===== Weekly View Section ===== -->
+            <section class="content-section" id="section-weekly">
+                <div class="section-header">
+                    <h2>Week by Week Progress</h2>
+                </div>
+                <div class="weekly-timeline" id="weeklyTimeline"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ========== ADD/EDIT MEMBER MODAL ========== -->
+    <div class="modal-overlay" id="memberModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="memberModalTitle">Add Team Member</h3>
+                <button class="modal-close" onclick="closeModal('memberModal')">&times;</button>
+            </div>
+            <form id="memberFormData" onsubmit="saveMember(event)">
+                <input type="hidden" id="editMemberId">
+                <div class="form-group">
+                    <label>Full Name <span class="req">*</span></label>
+                    <input type="text" id="mName" required placeholder="e.g., Rahul Kumar">
+                </div>
+                <div class="form-group">
+                    <label>Roll No. <span class="req">*</span></label>
+                    <input type="text" id="mRollNo" required placeholder="e.g., 21CS101">
+                </div>
+                <div class="form-group">
+                    <label>Gmail <span class="req">*</span></label>
+                    <input type="email" id="mGmail" required placeholder="e.g., rahul@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label>Mobile No. <span class="req">*</span></label>
+                    <input type="tel" id="mMobile" required placeholder="e.g., 9876543210" pattern="[0-9]{10}">
+                </div>
+                <div class="form-group">
+                    <label>Availability</label>
+                    <select id="mAvailability">
+                        <option value="Available">Available</option>
+                        <option value="Busy">Busy</option>
+                        <option value="On Leave">On Leave</option>
+                        <option value="Offline">Offline</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('memberModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="memberSubmitBtn">Add Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== ADD/EDIT PROGRESS MODAL ========== -->
+    <div class="modal-overlay" id="progressModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="progressModalTitle">Add Work Progress</h3>
+                <button class="modal-close" onclick="closeModal('progressModal')">&times;</button>
+            </div>
+            <form id="progressFormData" onsubmit="saveProgress(event)">
+                <input type="hidden" id="editProgressId">
+                <div class="form-group">
+                    <label>Work Title <span class="req">*</span></label>
+                    <input type="text" id="pTitle" required placeholder="e.g., Designed login page">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="pDescription" rows="3" placeholder="Detailed description of work done..."></textarea>
+                </div>
+                <div class="form-group member-select-group">
+                    <label>Members <span class="req">*</span></label>
+                    <div class="multi-select" id="memberMultiSelect">
+                        <div class="multi-select-trigger" id="memberSelectTrigger" onclick="toggleMultiSelect()">
+                            <span class="multi-select-placeholder">Select members...</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="multi-select-dropdown" id="memberDropdown">
+                            <div class="multi-select-search">
+                                <input type="text" placeholder="Search members..." id="memberSearchInput" oninput="filterMemberOptions(this.value)">
+                            </div>
+                            <div class="multi-select-options" id="memberOptions">
+                                <!-- Populated by JS -->
+                            </div>
+                            <div class="multi-select-footer">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="clearMemberSelection()">Clear</button>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="toggleMultiSelect()">Done</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Week <span class="req">*</span></label>
+                        <select id="pWeek" required>
+                            <option value="1">Week 1</option>
+                            <option value="2">Week 2</option>
+                            <option value="3">Week 3</option>
+                            <option value="4">Week 4</option>
+                            <option value="5">Week 5</option>
+                            <option value="6">Week 6</option>
+                            <option value="7">Week 7</option>
+                            <option value="8">Week 8</option>
+                            <option value="9">Week 9</option>
+                            <option value="10">Week 10</option>
+                            <option value="11">Week 11</option>
+                            <option value="12">Week 12</option>
+                        </select>
+                        <small class="admin-time-note" id="weekNote" style="display:none;">
+                            <i class="fas fa-lock"></i> Only admin can edit week
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="pStatus">
+                            <option value="Completed">Completed</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date of Work <span class="req">*</span></label>
+                        <input type="date" id="pDate" required>
+                        <small class="admin-time-note" id="dateNote" style="display:none;">
+                            <i class="fas fa-lock"></i> Only admin can edit date
+                        </small>
+                    </div>
+                    <div class="form-group time-field">
+                        <label>Time Spent (hours) <span class="req">*</span></label>
+                        <input type="number" id="pHours" required min="0.5" max="24" step="0.5" placeholder="e.g., 3">
+                        <small class="admin-time-note" id="timeNote" style="display:none;">
+                            <i class="fas fa-lock"></i> Only admin can edit time
+                        </small>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('progressModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="progressSubmitBtn">Add Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== CONFIRM DELETE MODAL ========== -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal modal-sm">
+            <div class="modal-header">
+                <h3>Confirm Delete</h3>
+                <button class="modal-close" onclick="closeModal('confirmModal')">&times;</button>
+            </div>
+            <div class="modal-body-text">
+                <i class="fas fa-exclamation-triangle" style="color:var(--danger);font-size:2rem;"></i>
+                <p id="confirmMessage">Are you sure?</p>
+            </div>
+            <div class="form-actions" style="padding:0 24px 24px;">
+                <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
