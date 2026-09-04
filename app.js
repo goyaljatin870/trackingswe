@@ -6,12 +6,12 @@
 
 // ===== ⚠️ FIREBASE CONFIG — PASTE YOUR CONFIG HERE ===== //
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDarzmDbhpZZpyvqAXLyGRNORGpzdrdMwo",
+  authDomain: "projectpulse-36e9f.firebaseapp.com",
+  projectId: "projectpulse-36e9f",
+  storageBucket: "projectpulse-36e9f.firebasestorage.app",
+  messagingSenderId: "628211205083",
+  appId: "1:628211205083:web:31586d94d3d398b5dc5dfe"
 };
 // ======================================================== //
 
