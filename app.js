@@ -16,18 +16,18 @@ const firebaseConfig = {
 // ======================================================== //
 
 // ===== Constants =====
-const ADMIN_CREDENTIALS = { userId: "admin", password: "admin123" };
+const ADMIN_CREDENTIALS = { userId: "jatin870", password: "Goyal@1234" };
 
 const COLORS = ['#6366f1','#ec4899','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ef4444','#14b8a6','#f97316','#a855f7'];
 
 const DEFAULTS = {
     members: [
-        { id: 1, name: "Aarav Sharma",   rollNo: "21CS101", gmail: "aarav.sharma@gmail.com",   mobile: "9876543210", availability: "Available", userId: "aarav",   password: "aarav123" },
-        { id: 2, name: "Priya Patel",    rollNo: "21CS102", gmail: "priya.patel@gmail.com",    mobile: "9876543211", availability: "Available", userId: "priya",   password: "priya123" },
-        { id: 3, name: "Rohan Gupta",    rollNo: "21CS103", gmail: "rohan.gupta@gmail.com",    mobile: "9876543212", availability: "Busy",      userId: "rohan",   password: "rohan123" },
-        { id: 4, name: "Sneha Reddy",    rollNo: "21CS104", gmail: "sneha.reddy@gmail.com",    mobile: "9876543213", availability: "Available", userId: "sneha",   password: "sneha123" },
-        { id: 5, name: "Vikram Singh",   rollNo: "21CS105", gmail: "vikram.singh@gmail.com",   mobile: "9876543214", availability: "On Leave",  userId: "vikram",  password: "vikram123" },
-        { id: 6, name: "Ananya Joshi",   rollNo: "21CS106", gmail: "ananya.joshi@gmail.com",   mobile: "9876543215", availability: "Available", userId: "ananya",  password: "ananya123" },
+        { id: 1, name: "Aarav Sharma",   rollNo: "21CS101", gmail: "aarav.sharma@gmail.com",   mobile: "9876543210", availability: "Available", userId: "aarav",   password: "aarav123",  approved: true },
+        { id: 2, name: "Priya Patel",    rollNo: "21CS102", gmail: "priya.patel@gmail.com",    mobile: "9876543211", availability: "Available", userId: "priya",   password: "priya123",  approved: true },
+        { id: 3, name: "Rohan Gupta",    rollNo: "21CS103", gmail: "rohan.gupta@gmail.com",    mobile: "9876543212", availability: "Busy",      userId: "rohan",   password: "rohan123",  approved: true },
+        { id: 4, name: "Sneha Reddy",    rollNo: "21CS104", gmail: "sneha.reddy@gmail.com",    mobile: "9876543213", availability: "Available", userId: "sneha",   password: "sneha123",  approved: true },
+        { id: 5, name: "Vikram Singh",   rollNo: "21CS105", gmail: "vikram.singh@gmail.com",   mobile: "9876543214", availability: "On Leave",  userId: "vikram",  password: "vikram123", approved: true },
+        { id: 6, name: "Ananya Joshi",   rollNo: "21CS106", gmail: "ananya.joshi@gmail.com",   mobile: "9876543215", availability: "Available", userId: "ananya",  password: "ananya123", approved: true },
     ],
     progress: [
         { id: 1,  title: "Designed login page wireframes",      desc: "Created high-fidelity mockups for login, signup and forgot password flows.",       memberIds: [2],    week: 1, status: "Completed",   date: "2026-08-11", hours: 4 },
@@ -288,6 +288,11 @@ function handleLogin(e) {
     );
 
     if (member && member.password === passwordInput) {
+        // Check if member is approved by admin
+        if (!member.approved) {
+            errorEl.innerHTML = '<i class="fas fa-clock"></i> Your account is pending admin approval. Please wait for the admin to approve your registration.';
+            return;
+        }
         currentRole = 'member';
         currentMemberId = member.id;
         enterApp();
@@ -328,16 +333,19 @@ function handleRegister(e) {
 
     const maxId = members.length > 0 ? Math.max(...members.map(m => m.id)) : 0;
     const newId = maxId + 1;
-    const newMember = { id: newId, name, rollNo, gmail, mobile, availability: 'Available', userId, password };
+    const newMember = { id: newId, name, rollNo, gmail, mobile, availability: 'Available', userId, password, approved: false };
 
-    // Optimistic: add locally + write to Firestore
-    members.push(newMember);
+    // Write to Firestore (pending approval)
     db.collection('members').doc(String(newId)).set(newMember);
 
-    currentRole = 'member';
-    currentMemberId = newId;
-    enterApp();
-    showToast(`Account created! Welcome, ${name}!`, 'success');
+    // Show success message — do NOT auto-login
+    document.querySelector('#registerPanel form').reset();
+    const successEl = document.getElementById('registerError');
+    successEl.style.color = 'var(--success)';
+    successEl.innerHTML = '<i class="fas fa-check-circle"></i> Registration successful! Your account is pending admin approval. You will be able to login once approved.';
+
+    // Reset color after switching tabs
+    setTimeout(() => { successEl.style.color = ''; }, 8000);
 }
 
 function loginAsPublic() {
@@ -450,8 +458,23 @@ function renderAll() {
 
 // ===== Dashboard =====
 function renderDashboard() {
-    document.getElementById('statMembers').textContent = members.length;
+    const approvedCount = members.filter(m => m.approved !== false).length;
+    const pendingCount = members.filter(m => m.approved === false).length;
+    document.getElementById('statMembers').textContent = approvedCount;
     document.getElementById('statEntries').textContent = progressEntries.length;
+
+    // Show pending badge on Team nav if admin has pending approvals
+    const teamNav = document.querySelector('[data-section="team"]');
+    if (teamNav) {
+        const existingBadge = teamNav.querySelector('.nav-badge');
+        if (existingBadge) existingBadge.remove();
+        if (currentRole === 'admin' && pendingCount > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'nav-badge';
+            badge.textContent = pendingCount;
+            teamNav.appendChild(badge);
+        }
+    }
 
     const weeks = [...new Set(progressEntries.map(p => p.week))];
     const maxWeek = weeks.length > 0 ? Math.max(...weeks) : 0;
@@ -497,11 +520,12 @@ function renderRecentEntries() {
 
 function renderTeamMiniList() {
     const container = document.getElementById('teamMiniList');
-    if (members.length === 0) {
+    const approvedMembers = members.filter(m => m.approved !== false);
+    if (approvedMembers.length === 0) {
         container.innerHTML = '<p class="empty-state">No team members</p>';
         return;
     }
-    container.innerHTML = members.map(m => {
+    container.innerHTML = approvedMembers.map(m => {
         const entryCount = progressEntries.filter(p => getMemberIds(p).includes(m.id)).length;
         return `
             <div class="team-mini-item">
@@ -519,40 +543,108 @@ function renderTeamMiniList() {
 // ===== Team Members =====
 function renderTeam() {
     const grid = document.getElementById('teamGrid');
+
+    const approvedMembers = members.filter(m => m.approved !== false);
+    const pendingMembers = members.filter(m => m.approved === false);
+
     if (members.length === 0) {
         grid.innerHTML = '<p class="empty-state" style="grid-column:1/-1;"><i class="fas fa-users"></i>No team members added yet</p>';
         return;
     }
-    grid.innerHTML = members.map(m => {
-        const entries = progressEntries.filter(p => getMemberIds(p).includes(m.id));
-        const completed = entries.filter(p => p.status === 'Completed').length;
-        const totalHours = entries.reduce((s, e) => s + (e.hours || 0), 0);
 
-        return `
-            <div class="team-card">
-                <div class="team-card-header">
-                    <div class="team-card-avatar">${getInitials(m.name)}</div>
-                    <div class="team-card-info">
-                        <h4>${m.name}</h4>
-                        <span>${m.rollNo}</span>
-                    </div>
+    let html = '';
+
+    // Pending Approvals Section (Admin only)
+    if (currentRole === 'admin' && pendingMembers.length > 0) {
+        html += `
+            <div class="pending-section" style="grid-column:1/-1;">
+                <div class="pending-header">
+                    <h3><i class="fas fa-user-clock"></i> Pending Approvals <span class="pending-count">${pendingMembers.length}</span></h3>
                 </div>
-                <div class="team-card-body">
-                    <div class="team-detail"><i class="fas fa-envelope"></i><span>${m.gmail}</span></div>
-                    <div class="team-detail"><i class="fas fa-phone"></i><span>${m.mobile}</span></div>
-                    <div class="team-detail"><i class="fas fa-signal"></i><span class="availability-tag ${m.availability}">${m.availability}</span></div>
-                    <div class="team-detail" style="border-bottom:none;"><i class="fas fa-chart-bar"></i><span>${completed} completed · ${totalHours}h total</span></div>
-                </div>
-                <div class="team-card-footer">
-                    <span class="meta-tag"><i class="fas fa-clipboard-list"></i> ${entries.length} entries</span>
-                    <div class="card-actions" ${currentRole !== 'admin' ? 'style="display:none"' : ''}>
-                        <button onclick="editMember(${m.id})" title="Edit"><i class="fas fa-pen"></i> Edit</button>
-                        <button class="delete-btn" onclick="confirmDeleteMember(${m.id})" title="Delete"><i class="fas fa-trash"></i></button>
-                    </div>
+                <div class="pending-list">
+                    ${pendingMembers.map(m => `
+                        <div class="pending-card">
+                            <div class="pending-card-left">
+                                <div class="team-card-avatar pending-avatar">${getInitials(m.name)}</div>
+                                <div class="pending-info">
+                                    <h4>${m.name}</h4>
+                                    <div class="pending-details">
+                                        <span><i class="fas fa-id-badge"></i> ${m.rollNo}</span>
+                                        <span><i class="fas fa-envelope"></i> ${m.gmail}</span>
+                                        <span><i class="fas fa-phone"></i> ${m.mobile}</span>
+                                        <span><i class="fas fa-user"></i> @${m.userId}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="pending-actions">
+                                <button class="btn btn-primary btn-sm" onclick="approveMember(${m.id})">
+                                    <i class="fas fa-check"></i> Approve
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectMember(${m.id})">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
         `;
-    }).join('');
+    }
+
+    // Approved team members
+    if (approvedMembers.length === 0 && pendingMembers.length > 0) {
+        html += '<p class="empty-state" style="grid-column:1/-1;">No approved team members yet</p>';
+    } else {
+        html += approvedMembers.map(m => {
+            const entries = progressEntries.filter(p => getMemberIds(p).includes(m.id));
+            const completed = entries.filter(p => p.status === 'Completed').length;
+            const totalHours = entries.reduce((s, e) => s + (e.hours || 0), 0);
+
+            return `
+                <div class="team-card">
+                    <div class="team-card-header">
+                        <div class="team-card-avatar">${getInitials(m.name)}</div>
+                        <div class="team-card-info">
+                            <h4>${m.name}</h4>
+                            <span>${m.rollNo}</span>
+                        </div>
+                    </div>
+                    <div class="team-card-body">
+                        <div class="team-detail"><i class="fas fa-envelope"></i><span>${m.gmail}</span></div>
+                        <div class="team-detail"><i class="fas fa-phone"></i><span>${m.mobile}</span></div>
+                        <div class="team-detail"><i class="fas fa-signal"></i><span class="availability-tag ${m.availability}">${m.availability}</span></div>
+                        <div class="team-detail" style="border-bottom:none;"><i class="fas fa-chart-bar"></i><span>${completed} completed · ${totalHours}h total</span></div>
+                    </div>
+                    <div class="team-card-footer">
+                        <span class="meta-tag"><i class="fas fa-clipboard-list"></i> ${entries.length} entries</span>
+                        <div class="card-actions" ${currentRole !== 'admin' ? 'style="display:none"' : ''}>
+                            <button onclick="editMember(${m.id})" title="Edit"><i class="fas fa-pen"></i> Edit</button>
+                            <button class="delete-btn" onclick="confirmDeleteMember(${m.id})" title="Delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    grid.innerHTML = html;
+}
+
+function approveMember(id) {
+    db.collection('members').doc(String(id)).update({ approved: true });
+    showToast('Member approved! They can now login.', 'success');
+}
+
+function rejectMember(id) {
+    const m = members.find(x => x.id === id);
+    if (!m) return;
+    document.getElementById('confirmMessage').textContent = `Reject and remove "${m.name}"? They will need to register again.`;
+    document.getElementById('confirmDeleteBtn').onclick = () => {
+        db.collection('members').doc(String(id)).delete();
+        closeModal('confirmModal');
+        showToast(`${m.name}'s registration rejected`, 'error');
+    };
+    openModal('confirmModal');
 }
 
 // ===== Work Progress =====
@@ -844,7 +936,8 @@ function saveMember(e) {
             id: newId,
             ...data,
             userId: defaultUserId,
-            password: defaultUserId + "123"
+            password: defaultUserId + "123",
+            approved: true   // Admin-added members are auto-approved
         };
         db.collection('members').doc(String(newId)).set(newMember);
         showToast(`${data.name} added! (Login: ${defaultUserId})`, 'success');
@@ -915,7 +1008,7 @@ function openAddProgress() {
         availableMembers = members.filter(m => m.id === currentMemberId);
         populateMemberOptions(availableMembers, [currentMemberId]);
     } else {
-        availableMembers = members;
+        availableMembers = members.filter(m => m.approved !== false);
         populateMemberOptions(availableMembers, []);
     }
 
@@ -951,7 +1044,7 @@ function editProgress(id, canEditTime) {
         const availableMembers = members.filter(m => ids.includes(m.id) || m.id === currentMemberId);
         populateMemberOptions(availableMembers, ids);
     } else {
-        populateMemberOptions(members, ids);
+        populateMemberOptions(members.filter(m => m.approved !== false || ids.includes(m.id)), ids);
     }
 
     const hoursField = document.getElementById('pHours');
