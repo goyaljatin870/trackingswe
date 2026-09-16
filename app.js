@@ -1670,19 +1670,24 @@ function renderFiles(type) {
     }
 
     grid.innerHTML = files.map(file => {
+        const fileId = file.docId || file.id;
         const info = getFileTypeInfo(file.fileName);
         const uploadDate = file.uploadDate ? formatDate(file.uploadDate) : 'Recently';
         const fileSize = file.fileSize > 0 ? formatFileSize(file.fileSize) : (file.isLink ? 'Web Link' : '');
+        const quickDelete = currentRole === 'admin'
+            ? `<button class="file-card-quick-delete" onclick="event.stopPropagation(); deleteFile('${type}', '${fileId}')" title="Delete permanently"><i class="fas fa-trash"></i></button>`
+            : '';
         const deleteBtn = currentRole === 'admin'
-            ? `<button class="delete-file-btn" onclick="event.stopPropagation(); deleteFile('${type}', '${file.docId}')" title="Delete"><i class="fas fa-trash"></i> Delete</button>`
+            ? `<button class="delete-file-btn" onclick="event.stopPropagation(); deleteFile('${type}', '${fileId}')" title="Delete"><i class="fas fa-trash"></i> Delete</button>`
             : '';
         const ghBtn = file.githubHtmlUrl
             ? `<a href="${file.githubHtmlUrl}" target="_blank" onclick="event.stopPropagation()" title="View on GitHub"><i class="fab fa-github"></i> GitHub</a>`
             : '';
 
         return `
-            <div class="file-card" onclick="viewFile('${file.docId}', '${type}')">
+            <div class="file-card" onclick="viewFile('${fileId}', '${type}')">
                 <div class="file-card-preview ${info.cls}">
+                    ${quickDelete}
                     <i class="fas ${info.icon}"></i>
                     <span class="file-ext-badge">${info.label}</span>
                 </div>
@@ -1693,10 +1698,10 @@ function renderFiles(type) {
                         ${fileSize ? `<span><i class="fas ${file.isLink ? 'fa-link' : 'fa-weight-hanging'}"></i> ${fileSize}</span>` : ''}
                     </div>
                     <div class="file-card-actions">
-                        <button onclick="event.stopPropagation(); viewFile('${file.docId}', '${type}')">
+                        <button onclick="event.stopPropagation(); viewFile('${fileId}', '${type}')">
                             <i class="fas fa-eye"></i> View
                         </button>
-                        <button onclick="event.stopPropagation(); viewFile('${file.docId}', '${type}', true)" title="Open in Fullscreen">
+                        <button onclick="event.stopPropagation(); viewFile('${fileId}', '${type}', true)" title="Open in Fullscreen">
                             <i class="fas fa-expand"></i> Fullscreen
                         </button>
                         <a href="${file.fileUrl}" target="_blank" download onclick="event.stopPropagation()">
@@ -1713,20 +1718,28 @@ function renderFiles(type) {
 
 // ===== FILE VIEWER (Multi-Engine & Fullscreen) =====
 let currentViewerFile = null;
+let currentViewerType = null;
 let currentViewerEngine = 'office'; // 'office' | 'google'
 
 function viewFile(docId, type, startFullscreen = false) {
     const files = type === 'presentations' ? presentations : reports;
-    const file = files.find(f => f.docId === docId);
+    const file = files.find(f => (f.docId || f.id) == docId);
     if (!file) return;
 
     currentViewerFile = file;
+    currentViewerType = type;
     const info = getFileTypeInfo(file.fileName);
     const ext = file.fileName.split('.').pop().toLowerCase();
     const isOffice = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(ext);
 
     document.getElementById('viewerTitle').textContent = file.title;
     document.getElementById('viewerIcon').className = `fas ${info.icon}`;
+
+    // Configure admin delete button in viewer modal
+    const vDeleteBtn = document.getElementById('viewerDeleteBtn');
+    if (vDeleteBtn) {
+        vDeleteBtn.style.display = currentRole === 'admin' ? 'inline-flex' : 'none';
+    }
 
     // Always use fileUrl (raw.githubusercontent.com) - avoid 403-forbidden CDN URLs!
     const directFileUrl = file.fileUrl;
@@ -1943,43 +1956,91 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ===== DELETE FILE (GitHub + Firestore) =====
+function deleteCurrentViewerFile() {
+    if (!currentViewerFile) return;
+    const docId = currentViewerFile.docId || currentViewerFile.id;
+    const type = currentViewerType || (presentations.some(p => (p.docId || p.id) == docId) ? 'presentations' : 'reports');
+    closeViewer();
+    deleteFile(type, docId);
+}
+
 function deleteFile(type, docId) {
     const files = type === 'presentations' ? presentations : reports;
-    const file = files.find(f => f.docId === docId);
+    const file = files.find(f => (f.docId || f.id) == docId);
     if (!file) return;
 
-    document.getElementById('confirmMessage').textContent = `Delete "${file.title}"? This will also delete it from GitHub.`;
+    const fileTitle = file.title || file.fileName || 'this file';
+    document.getElementById('confirmMessage').textContent = `Delete "${fileTitle}"? This will permanently delete it from the website${file.githubPath ? ' and GitHub repository' : ''}.`;
+
     document.getElementById('confirmDeleteBtn').onclick = async () => {
+        const btn = document.getElementById('confirmDeleteBtn');
+        const oldText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
         try {
             const config = getGithubConfig();
-            // Delete from GitHub repository if path and sha exist and token available
-            if (file.githubPath && file.githubSha && config.token) {
+
+            // 1. Delete from GitHub repository if stored in GitHub and token available
+            if (file.githubPath && config.token) {
                 try {
-                    await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${file.githubPath}`, {
-                        method: 'DELETE',
+                    // Fetch fresh sha from GitHub to prevent 409 conflict
+                    const getRes = await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${file.githubPath}?ref=${config.branch}`, {
                         headers: {
                             'Authorization': `token ${config.token}`,
-                            'Accept': 'application/vnd.github.v3+json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            message: `Delete ${file.fileName} [ProjectPulse]`,
-                            sha: file.githubSha,
-                            branch: config.branch
-                        })
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
                     });
+
+                    let targetSha = file.githubSha;
+                    if (getRes.ok) {
+                        const fileData = await getRes.json();
+                        if (fileData && fileData.sha) {
+                            targetSha = fileData.sha;
+                        }
+                    }
+
+                    if (targetSha) {
+                        await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${file.githubPath}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `token ${config.token}`,
+                                'Accept': 'application/vnd.github.v3+json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                message: `Delete ${file.fileName || file.title} [ProjectPulse]`,
+                                sha: targetSha,
+                                branch: config.branch
+                            })
+                        });
+                    }
                 } catch (ghErr) {
                     console.warn('GitHub file delete warning:', ghErr);
                 }
             }
 
-            // Delete record from Firestore
-            await db.collection(type).doc(docId).delete();
+            // 2. Delete record from Firestore
+            if (db && docId) {
+                await db.collection(type).doc(String(docId)).delete();
+            }
+
+            // 3. Immediately update in-memory array and re-render grid
+            if (type === 'presentations') {
+                presentations = presentations.filter(f => (f.docId || f.id) != docId);
+            } else {
+                reports = reports.filter(f => (f.docId || f.id) != docId);
+            }
+            renderFiles(type);
+
             closeModal('confirmModal');
-            showToast('File deleted successfully', 'error');
+            showToast(`${type === 'presentations' ? 'Presentation' : 'Report'} deleted successfully`, 'success');
         } catch (err) {
             console.error('Delete error:', err);
             showToast('Delete failed: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = oldText;
         }
     };
     openModal('confirmModal');

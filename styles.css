@@ -1823,16 +1823,18 @@ form { padding: 24px; }
 .file-card-actions {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .file-card-actions button,
 .file-card-actions a {
-    flex: 1;
+    flex: 1 1 calc(33.333% - 6px);
+    min-width: 68px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 5px;
-    padding: 8px 0;
+    padding: 8px 4px;
     border: 1px solid var(--border-color);
     background: var(--bg-tertiary);
     color: var(--text-secondary);
@@ -1851,9 +1853,47 @@ form { padding: 24px; }
     color: var(--primary);
 }
 
+.file-card-actions .delete-file-btn {
+    color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
 .file-card-actions .delete-file-btn:hover {
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
     border-color: var(--danger);
     color: var(--danger);
+}
+
+.file-card-quick-delete {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    transition: var(--transition);
+    backdrop-filter: blur(4px);
+    z-index: 3;
+}
+
+.file-card-quick-delete:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+    transform: scale(1.1);
+}
+
+.viewer-actions .viewer-delete-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
 }
 
 /* Source Toggle */
