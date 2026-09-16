@@ -20,36 +20,53 @@ const ADMIN_CREDENTIALS = { userId: "jatin870", password: "Goyal@1234" };
 
 const COLORS = ['#6366f1','#ec4899','#10b981','#f59e0b','#8b5cf6','#06b6d4','#ef4444','#14b8a6','#f97316','#a855f7'];
 
+const WEEK_TITLES = {
+    1: "Setup & Architecture",
+    2: "Core Backend + Auth",
+    3: "Ingestion & Comparison",
+    4: "Reviewer Console + Provenance",
+    5: "Deployment & Prototype Polish"
+};
+const CURRENT_WEEK = 5;
+
 const DEFAULTS = {
     members: [
-        { id: 1, name: "Aarav Sharma",   rollNo: "21CS101", gmail: "aarav.sharma@gmail.com",   mobile: "9876543210", availability: "Available", userId: "aarav",   password: "aarav123",  approved: true },
-        { id: 2, name: "Priya Patel",    rollNo: "21CS102", gmail: "priya.patel@gmail.com",    mobile: "9876543211", availability: "Available", userId: "priya",   password: "priya123",  approved: true },
-        { id: 3, name: "Rohan Gupta",    rollNo: "21CS103", gmail: "rohan.gupta@gmail.com",    mobile: "9876543212", availability: "Busy",      userId: "rohan",   password: "rohan123",  approved: true },
-        { id: 4, name: "Sneha Reddy",    rollNo: "21CS104", gmail: "sneha.reddy@gmail.com",    mobile: "9876543213", availability: "Available", userId: "sneha",   password: "sneha123",  approved: true },
-        { id: 5, name: "Vikram Singh",   rollNo: "21CS105", gmail: "vikram.singh@gmail.com",   mobile: "9876543214", availability: "On Leave",  userId: "vikram",  password: "vikram123", approved: true },
-        { id: 6, name: "Ananya Joshi",   rollNo: "21CS106", gmail: "ananya.joshi@gmail.com",   mobile: "9876543215", availability: "Available", userId: "ananya",  password: "ananya123", approved: true },
+        { id: 9,  name: "Vaishnavi Singh",   rollNo: "1024030130", gmail: "vsingh3_be24@thapar.edu",     mobile: "8707371709", availability: "Available", userId: "vsingh3_be24@thapar.edu", password: "gungun@123",  approved: true, role: "Frontend" },
+        { id: 10, name: "Ragini kalra",      rollNo: "1024030139", gmail: "rkalra_be24@thapar.edu",      mobile: "8708495210", availability: "Available", userId: "raginikalra",             password: "ragini21",    approved: true, role: "Lead" },
+        { id: 11, name: "Madhav Hareendran", rollNo: "1024030134", gmail: "Mhareendran_be24@thapar.edu", mobile: "9667015676", availability: "Available", userId: "Maddy",                   password: "Madhav(01)",  approved: true, role: "Research" },
+        { id: 12, name: "Jatin Goyal",       rollNo: "2C15",       gmail: "jgoyal_be24@thapar.edu",       mobile: "7082169225", availability: "Available", userId: "goyaljatin",              password: "Goyal@1234",  approved: true, role: "Backend" },
     ],
     progress: [
-        { id: 1,  title: "Designed login page wireframes",      desc: "Created high-fidelity mockups for login, signup and forgot password flows.",       memberIds: [2],    week: 1, status: "Completed",   date: "2026-08-11", hours: 4 },
-        { id: 2,  title: "Setup CI/CD pipeline",                desc: "Configured GitHub Actions for automated testing and deployment.",                  memberIds: [5],    week: 1, status: "Completed",   date: "2026-08-12", hours: 6 },
-        { id: 3,  title: "Database schema design",              desc: "Designed normalized PostgreSQL schema with ER diagrams.",                          memberIds: [3, 1], week: 1, status: "Completed",   date: "2026-08-13", hours: 5 },
-        { id: 4,  title: "Implemented JWT authentication",      desc: "Built JWT-based auth with refresh tokens and session management.",                 memberIds: [1],    week: 2, status: "Completed",   date: "2026-08-18", hours: 8 },
-        { id: 5,  title: "Dashboard UI components",             desc: "Built reusable chart components and stats cards.",                                 memberIds: [2, 6], week: 2, status: "Completed",   date: "2026-08-19", hours: 6 },
-        { id: 6,  title: "API rate limiting middleware",         desc: "Implemented Express middleware for request throttling.",                           memberIds: [3],    week: 2, status: "Completed",   date: "2026-08-20", hours: 3 },
-        { id: 7,  title: "Unit test setup with Jest",           desc: "Configured Jest, wrote tests for auth and user modules.",                          memberIds: [4],    week: 2, status: "Completed",   date: "2026-08-21", hours: 5 },
-        { id: 8,  title: "React Router with lazy loading",      desc: "Setup client-side routing with code splitting.",                                   memberIds: [1],    week: 3, status: "Completed",   date: "2026-08-25", hours: 4 },
-        { id: 9,  title: "Dashboard charts integration",        desc: "Integrated Chart.js for real-time analytics displays.",                            memberIds: [2, 3], week: 3, status: "Completed",   date: "2026-08-26", hours: 7 },
-        { id: 10, title: "Data migration scripts",              desc: "Wrote Node.js scripts for legacy data migration.",                                 memberIds: [3],    week: 3, status: "Completed",   date: "2026-08-27", hours: 6 },
-        { id: 11, title: "Integration testing suite",           desc: "Wrote API integration tests with Supertest.",                                      memberIds: [4, 1], week: 3, status: "Completed",   date: "2026-08-28", hours: 5 },
-        { id: 12, title: "Docker containerization",             desc: "Dockerized all microservices and created docker-compose.",                          memberIds: [5],    week: 3, status: "Completed",   date: "2026-08-28", hours: 6 },
-        { id: 13, title: "WebSocket notifications",             desc: "Built real-time notification system with Socket.io.",                              memberIds: [1, 3], week: 4, status: "Completed",   date: "2026-09-01", hours: 7 },
-        { id: 14, title: "User profile management",             desc: "Profile pages with avatar upload and settings.",                                   memberIds: [2],    week: 4, status: "Completed",   date: "2026-09-02", hours: 5 },
-        { id: 15, title: "Redis caching layer",                 desc: "Implemented Redis caching for frequently accessed APIs.",                          memberIds: [3, 5], week: 4, status: "Completed",   date: "2026-09-03", hours: 4 },
-        { id: 16, title: "File upload service",                 desc: "Building S3-based file upload with presigned URLs.",                               memberIds: [1, 2], week: 5, status: "In Progress", date: "2026-09-08", hours: 3 },
-        { id: 17, title: "Admin panel development",             desc: "Creating admin dashboard with user management.",                                   memberIds: [2, 6], week: 5, status: "In Progress", date: "2026-09-09", hours: 4 },
-        { id: 18, title: "Elasticsearch integration",           desc: "Setting up full-text search across the platform.",                                 memberIds: [3],    week: 5, status: "In Progress", date: "2026-09-10", hours: 5 },
-        { id: 19, title: "Kubernetes deployment config",        desc: "Writing K8s manifests and Helm charts.",                                           memberIds: [5, 4], week: 5, status: "Pending",     date: "2026-09-11", hours: 0 },
-        { id: 20, title: "E2E test automation",                 desc: "Cypress tests for critical user flows.",                                           memberIds: [4, 6], week: 5, status: "Pending",     date: "2026-09-10", hours: 0 },
+        // Week 1 — Setup & Architecture
+        { id: 1,  title: "Project architecture finalize, repo structure setup, team role division, GitHub repo setup", desc: "Finalized overall notice-verification architecture, established repository structure, assigned team roles, and configured GitHub repo.", memberIds: [10], week: 1, status: "Completed", date: "2026-08-11", hours: 6 },
+        { id: 2,  title: "React + Vite project scaffold, routing setup, base layout/NavBar", desc: "Scaffolded React + Vite project, set up client-side routing, and created responsive base layout with Navigation Bar.", memberIds: [9], week: 1, status: "Completed", date: "2026-08-12", hours: 5 },
+        { id: 3,  title: "FastAPI app skeleton, SQLAlchemy models design (User, Notice, Institution)", desc: "Built FastAPI backend skeleton and designed relational SQLAlchemy models for User, Notice, and Institution schemas.", memberIds: [12], week: 1, status: "Completed", date: "2026-08-13", hours: 6 },
+        { id: 4,  title: "Research on notice-verification approaches, competitor/similar-tool study, requirements doc", desc: "Researched existing notice-verification methods, benchmarked similar tools and government systems, and compiled the SRS document.", memberIds: [11], week: 1, status: "Completed", date: "2026-08-14", hours: 5 },
+
+        // Week 2 — Core Backend + Auth
+        { id: 5,  title: "Integration of auth flow between frontend-backend, API contract review", desc: "Reviewed API contracts between frontend and backend, and coordinated seamless authentication flow integration.", memberIds: [10], week: 2, status: "Completed", date: "2026-08-18", hours: 5 },
+        { id: 6,  title: "Login/Register pages, ProtectedRoute component, AuthContext", desc: "Built user authentication interfaces (Login/Register), created AuthContext provider, and implemented ProtectedRoute wrapper.", memberIds: [9], week: 2, status: "Completed", date: "2026-08-19", hours: 6 },
+        { id: 7,  title: "JWT auth implementation, password hashing, /api/auth endpoints", desc: "Implemented JWT token creation and verification, password hashing with bcrypt, and `/api/auth` endpoints.", memberIds: [12], week: 2, status: "Completed", date: "2026-08-20", hours: 6 },
+        { id: 8,  title: "Test case design for auth flows, manual QA of login/register", desc: "Designed test cases for authentication security and performed manual QA on registration, login, and error boundary handling.", memberIds: [11], week: 2, status: "Completed", date: "2026-08-21", hours: 4 },
+
+        // Week 3 — Ingestion & Comparison
+        { id: 9,  title: "Coordinate ingestion ↔ comparison module integration, data flow review", desc: "Supervised the integration between document ingestion and comparison analysis modules and audited data flow reliability.", memberIds: [10], week: 3, status: "Completed", date: "2026-08-25", hours: 5 },
+        { id: 10, title: "Submit-notice page (text/PDF upload UI), Notices listing page", desc: "Developed notice submission page with text/PDF upload interface and paginated notices listing with search and filters.", memberIds: [9], week: 3, status: "Completed", date: "2026-08-26", hours: 6 },
+        { id: 11, title: "Ingestion service (PDF/image extraction), comparison/classification logic", desc: "Engineered document ingestion service for PDF/image text extraction and built classification and comparison algorithms.", memberIds: [12], week: 3, status: "Completed", date: "2026-08-27", hours: 7 },
+        { id: 12, title: "Test fixtures/dataset creation, extraction accuracy testing", desc: "Constructed comprehensive test fixtures and datasets to benchmark text extraction accuracy across various circular formats.", memberIds: [11], week: 3, status: "Completed", date: "2026-08-28", hours: 5 },
+
+        // Week 4 — Reviewer Console + Provenance
+        { id: 13, title: "Reviewer workflow integration, cross-module consistency checks", desc: "Integrated reviewer decision workflows and conducted thorough cross-module consistency validation.", memberIds: [10], week: 4, status: "Completed", date: "2026-09-01", hours: 5 },
+        { id: 14, title: "Reviewer Queue/Case pages, Benchmark page UI", desc: "Built reviewer case queue interface, detailed case investigation view, and model performance benchmark comparison UI.", memberIds: [9], week: 4, status: "Completed", date: "2026-09-02", hours: 6 },
+        { id: 15, title: "Alerts page for students", desc: "Created student alerts feed for verified and flagged notices with real-time notification indicators.", memberIds: [9], week: 4, status: "Completed", date: "2026-09-03", hours: 4 },
+        { id: 16, title: "Provenance (Merkle tree/hash chain) service, reviewer API endpoints", desc: "Developed cryptographic provenance tracking via Merkle tree / hash chains for audit trails and built reviewer REST APIs.", memberIds: [12], week: 4, status: "Completed", date: "2026-09-04", hours: 7 },
+        { id: 17, title: "pytest suite writing (backend/finalsay/tests), evaluation harness testing", desc: "Authored automated pytest suite for backend tests and verified the evaluation harness for notice authenticity classification.", memberIds: [11], week: 4, status: "Completed", date: "2026-09-05", hours: 6 },
+
+        // Week 5 — Deployment & Prototype Polish (Current Week)
+        { id: 18, title: "End-to-end demo walkthrough, prototype presentation prep, final integration testing", desc: "Conducting complete end-to-end demo run-throughs, preparing pitch presentation deck, and executing final integration testing.", memberIds: [10], week: 5, status: "In Progress", date: "2026-09-14", hours: 5 },
+        { id: 19, title: "UI polish, PWA/manifest setup, responsive fixes", desc: "Refining visual design aesthetics, configuring PWA web app manifest, and resolving mobile responsiveness edge cases.", memberIds: [9], week: 5, status: "In Progress", date: "2026-09-15", hours: 4 },
+        { id: 20, title: "Docker/Dockerfile, docker-compose (Postgres), health/readiness endpoints, deployment pipeline fix", desc: "Building multi-stage Docker container configs, docker-compose for PostgreSQL, health check probes, and fixing deployment pipeline.", memberIds: [12], week: 5, status: "In Progress", date: "2026-09-16", hours: 5 },
+        { id: 21, title: "Full regression testing (61+ test cases), bug reporting, final QA sign-off", desc: "Running full regression test suite with 61+ test scenarios, reporting defects, and performing final QA sign-off for prototype release.", memberIds: [11], week: 5, status: "In Progress", date: "2026-09-16", hours: 5 },
     ]
 };
 
@@ -682,7 +699,7 @@ function renderWorkProgress() {
     const weeks = [...new Set(progressEntries.map(p => p.week))].sort((a, b) => a - b);
     const currentFilterVal = weekFilter.value;
     weekFilter.innerHTML = '<option value="all">All Weeks</option>' +
-        weeks.map(w => `<option value="${w}">Week ${w}</option>`).join('');
+        weeks.map(w => `<option value="${w}">Week ${w}${w === CURRENT_WEEK ? ' (Current)' : ''}${WEEK_TITLES[w] ? ` — ${WEEK_TITLES[w]}` : ''}</option>`).join('');
     weekFilter.value = currentFilterVal;
 
     const filterVal = weekFilter.value;
@@ -699,23 +716,19 @@ function renderWorkProgress() {
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (filtered.length === 0) {
-        container.innerHTML = '<p class="empty-state"><i class="fas fa-inbox"></i>No work progress entries found</p>';
+        container.innerHTML = '<p class="empty-state"><i class="fas fa-tasks"></i>No progress entries found</p>';
         return;
     }
 
     container.innerHTML = filtered.map(entry => {
         const ids = getMemberIds(entry);
-        const firstMember = members.find(x => x.id === ids[0]);
-        const color = firstMember ? getColor(firstMember.id) : '#999';
-        const initials = firstMember ? getInitials(firstMember.name) : '?';
         const canEdit = currentRole === 'admin' || (currentRole === 'member' && ids.includes(currentMemberId));
         const canDelete = currentRole === 'admin';
         const canEditTime = currentRole === 'admin';
 
         return `
-            <div class="progress-entry">
-                <div class="progress-entry-avatar" style="background:${color}">${initials}</div>
-                <div class="progress-entry-content">
+            <div class="progress-entry-card" id="entry-${entry.id}">
+                <div class="progress-entry-left">
                     <div class="progress-entry-header">
                         <div>
                             <div class="progress-entry-title">${entry.title}</div>
@@ -723,7 +736,7 @@ function renderWorkProgress() {
                                 <span class="meta-tag"><i class="fas fa-users"></i> <span class="member-chips">${renderMemberChips(ids)}</span></span>
                                 <span class="meta-tag"><i class="fas fa-calendar"></i> ${formatDate(entry.date)}</span>
                                 <span class="meta-tag"><i class="fas fa-clock"></i> ${entry.hours}h</span>
-                                <span class="meta-tag"><i class="fas fa-layer-group"></i> Week ${entry.week}</span>
+                                <span class="meta-tag"><i class="fas fa-layer-group"></i> Week ${entry.week}${entry.week === CURRENT_WEEK ? ' (Current)' : ''}</span>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;">
@@ -760,15 +773,17 @@ function renderWeeklyView() {
         const pending = weekEntries.filter(p => p.status === 'Pending').length;
         const totalHours = weekEntries.reduce((s, e) => s + (e.hours || 0), 0);
         const percent = weekEntries.length > 0 ? Math.round((completed / weekEntries.length) * 100) : 0;
-        const isLast = idx === weeks.length - 1;
+        const isCurrent = w === CURRENT_WEEK;
+        const isExpanded = isCurrent || idx === weeks.length - 1;
+        const titleSuffix = WEEK_TITLES[w] ? ` — ${WEEK_TITLES[w]}` : '';
 
         return `
-            <div class="week-card">
+            <div class="week-card ${isCurrent ? 'current-week' : ''}">
                 <div class="week-header" onclick="toggleWeek(this)">
                     <div class="week-header-left">
                         <div class="week-number">W${w}</div>
                         <div class="week-title">
-                            <h4>Week ${w}</h4>
+                            <h4>Week ${w}${titleSuffix}${isCurrent ? ' <span class="current-week-badge"><i class="fas fa-bolt"></i> Current Week</span>' : ''}</h4>
                             <span>${weekEntries.length} entries · ${totalHours}h total</span>
                         </div>
                     </div>
@@ -790,12 +805,12 @@ function renderWeeklyView() {
                         <div class="week-progress-bar">
                             <div class="week-progress-fill" style="width:${percent}%"></div>
                         </div>
-                        <button class="week-toggle ${isLast ? 'expanded' : ''}">
+                        <button class="week-toggle ${isExpanded ? 'expanded' : ''}">
                             <i class="fas fa-chevron-down"></i>
                         </button>
                     </div>
                 </div>
-                <div class="week-body ${isLast ? 'expanded' : ''}">
+                <div class="week-body ${isExpanded ? 'expanded' : ''}">
                     <div class="week-entries-list">
                         ${weekEntries.map(entry => {
                             const ids = getMemberIds(entry);
