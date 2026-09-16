@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -276,6 +277,42 @@
                 </div>
                 <div class="weekly-timeline" id="weeklyTimeline"></div>
             </section>
+
+            <!-- ===== Presentations Section ===== -->
+            <section class="content-section" id="section-presentations">
+                <div class="section-header">
+                    <h2>Presentations</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary admin-only" onclick="openGithubSettings()" title="Configure GitHub Storage">
+                            <i class="fab fa-github"></i> GitHub Storage
+                        </button>
+                        <button class="btn btn-primary admin-only" onclick="openUploadModal('presentation')">
+                            <i class="fas fa-upload"></i> Upload PPT
+                        </button>
+                    </div>
+                </div>
+                <div class="files-grid" id="presentationsGrid">
+                    <p class="empty-state"><i class="fas fa-file-powerpoint"></i>No presentations uploaded yet</p>
+                </div>
+            </section>
+
+            <!-- ===== Reports Section ===== -->
+            <section class="content-section" id="section-reports">
+                <div class="section-header">
+                    <h2>Reports</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary admin-only" onclick="openGithubSettings()" title="Configure GitHub Storage">
+                            <i class="fab fa-github"></i> GitHub Storage
+                        </button>
+                        <button class="btn btn-primary admin-only" onclick="openUploadModal('report')">
+                            <i class="fas fa-upload"></i> Upload Report
+                        </button>
+                    </div>
+                </div>
+                <div class="files-grid" id="reportsGrid">
+                    <p class="empty-state"><i class="fas fa-file-alt"></i>No reports uploaded yet</p>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -428,6 +465,187 @@
                 <button class="btn btn-secondary" onclick="closeModal('confirmModal')">Cancel</button>
                 <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ========== FILE UPLOAD MODAL ========== -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="uploadModalTitle">Upload File</h3>
+                <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+            </div>
+            <form id="uploadFormData" onsubmit="handleFileUpload(event)">
+                <input type="hidden" id="uploadType" value="presentation">
+                <!-- GitHub Storage Destination Banner -->
+                <div class="gh-storage-banner" id="ghStorageBanner">
+                    <div class="gh-banner-icon"><i class="fab fa-github"></i></div>
+                    <div class="gh-banner-info">
+                        <div class="gh-banner-title">
+                            <span id="ghBannerRepo">goyaljatin870/trackingswe</span>
+                            <span class="gh-badge" id="ghBannerBadge">GitHub</span>
+                        </div>
+                        <span class="gh-banner-status" id="ghBannerStatus"><i class="fas fa-spinner fa-spin"></i> Checking token...</span>
+                    </div>
+                    <button type="button" class="gh-config-btn" onclick="openGithubSettings()">
+                        <i class="fas fa-cog"></i> Configure
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label>Title <span class="req">*</span></label>
+                    <input type="text" id="uploadTitle" required placeholder="e.g., Sprint 3 Presentation">
+                </div>
+                <div class="form-group">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <label style="margin-bottom:0;">Source <span class="req">*</span></label>
+                        <div class="upload-source-toggle">
+                            <button type="button" class="source-btn active" id="btnSourceFile" onclick="switchUploadSource('file')">
+                                <i class="fas fa-file-upload"></i> Upload File
+                            </button>
+                            <button type="button" class="source-btn" id="btnSourceLink" onclick="switchUploadSource('link')">
+                                <i class="fas fa-link"></i> Web Link
+                            </button>
+                        </div>
+                    </div>
+                    <!-- File upload group -->
+                    <div id="fileSourceGroup">
+                        <div class="drop-zone" id="dropZone">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag & drop file here or <span class="drop-zone-browse">click to browse</span></p>
+                            <p class="drop-zone-hint" id="dropZoneHint">PPT, PPTX, PDF, DOC, DOCX (Max 50MB)</p>
+                            <input type="file" id="fileInput" accept=".ppt,.pptx,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" style="display:none">
+                        </div>
+                        <div class="selected-file" id="selectedFile" style="display:none">
+                            <i class="fas fa-file" id="selectedFileIcon"></i>
+                            <div class="selected-file-info">
+                                <span class="selected-file-name" id="selectedFileName"></span>
+                                <span class="selected-file-size" id="selectedFileSize"></span>
+                            </div>
+                            <button type="button" class="selected-file-remove" onclick="removeSelectedFile()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Link input group -->
+                    <div id="linkSourceGroup" style="display:none;">
+                        <input type="url" id="uploadUrlInput" placeholder="https://docs.google.com/presentation/d/... or PDF link">
+                        <span style="display:block; margin-top:6px; font-size:0.75rem; color:var(--text-muted);">
+                            Paste a Google Slides, Google Docs, Drive, Canva, or online PDF link.
+                        </span>
+                    </div>
+                </div>
+                <!-- Upload Progress -->
+                <div class="upload-progress" id="uploadProgress" style="display:none">
+                    <div class="upload-progress-bar">
+                        <div class="upload-progress-fill" id="uploadProgressFill" style="width:0%"></div>
+                    </div>
+                    <span class="upload-progress-text" id="uploadProgressText">Uploading... 0%</span>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="uploadSubmitBtn">
+                        <i class="fas fa-upload"></i> Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== FILE VIEWER MODAL ========== -->
+    <div class="viewer-overlay" id="viewerModal">
+        <div class="viewer-header">
+            <div class="viewer-title">
+                <i class="fas fa-file" id="viewerIcon"></i>
+                <span id="viewerTitle">File Viewer</span>
+            </div>
+            <!-- Engine Switcher (Office vs Google) -->
+            <div class="viewer-engine-toggle" id="viewerEngineToggle" style="display:none;">
+                <button type="button" class="engine-btn active" id="btnEngineOffice" onclick="switchViewerEngine('office')">
+                    <i class="fab fa-microsoft"></i> Office
+                </button>
+                <button type="button" class="engine-btn" id="btnEngineGoogle" onclick="switchViewerEngine('google')">
+                    <i class="fab fa-google"></i> Google
+                </button>
+            </div>
+            <div class="viewer-actions">
+                <button type="button" class="viewer-btn" id="viewerFullscreenBtn" onclick="toggleViewerFullscreen()" title="Full Screen View (F)">
+                    <i class="fas fa-expand" id="viewerFullscreenIcon"></i>
+                </button>
+                <a class="viewer-btn" id="viewerDownload" href="#" download target="_blank" title="Download File">
+                    <i class="fas fa-download"></i>
+                </a>
+                <a class="viewer-btn" id="viewerNewTab" href="#" target="_blank" title="Open in new tab / GitHub">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+                <button class="viewer-btn" onclick="closeViewer()" title="Close (Esc)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="viewer-body" style="position:relative;">
+            <!-- Loading & Fallback Overlay -->
+            <div class="viewer-loading" id="viewerLoading">
+                <div class="viewer-spinner"></div>
+                <p id="viewerLoadingText">Loading presentation preview...</p>
+                <div class="viewer-fallback-actions">
+                    <a href="#" id="viewerFallbackOpen" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="fas fa-external-link-alt"></i> Open Presentation
+                    </a>
+                    <a href="#" id="viewerFallbackDownload" download class="btn btn-secondary btn-sm">
+                        <i class="fas fa-download"></i> Download File
+                    </a>
+                </div>
+            </div>
+            <iframe id="viewerFrame" src="" frameborder="0" allowfullscreen allow="fullscreen; autoplay; encrypted-media" onload="onViewerIframeLoad()"></iframe>
+        </div>
+    </div>
+
+    <!-- ========== GITHUB STORAGE SETTINGS MODAL ========== -->
+    <div class="modal-overlay" id="githubSettingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fab fa-github"></i> GitHub Storage Settings</h3>
+                <button class="modal-close" onclick="closeModal('githubSettingsModal')">&times;</button>
+            </div>
+            <form id="ghSettingsForm" onsubmit="saveGithubSettings(event)">
+                <div class="gh-settings-intro">
+                    <p>Files uploaded to ProjectPulse are committed directly into your GitHub repository for free, permanent cloud storage.</p>
+                </div>
+                <div class="form-group">
+                    <label>GitHub Owner / Username <span class="req">*</span></label>
+                    <input type="text" id="ghOwnerInput" required placeholder="e.g., goyaljatin870">
+                </div>
+                <div class="form-group">
+                    <label>Repository Name <span class="req">*</span></label>
+                    <input type="text" id="ghRepoInput" required placeholder="e.g., trackingswe">
+                </div>
+                <div class="form-group">
+                    <label>Branch <span class="req">*</span></label>
+                    <input type="text" id="ghBranchInput" required placeholder="main" value="main">
+                </div>
+                <div class="form-group">
+                    <label>Personal Access Token (PAT) <span class="req">*</span></label>
+                    <div style="position:relative;">
+                        <input type="password" id="ghTokenInput" required placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                        <button type="button" class="pwd-toggle" onclick="togglePassword('ghTokenInput', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px 8px;">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <span style="margin-top:8px;display:block;font-size:0.75rem;color:var(--text-muted);line-height:1.4;">
+                        Need a token? <a href="https://github.com/settings/tokens/new?scopes=repo&description=ProjectPulse+Storage" target="_blank" style="color:var(--primary);font-weight:600;text-decoration:underline;">Click here to generate a token</a> with <strong>repo</strong> permission.
+                    </span>
+                </div>
+                <div id="ghTestResult" style="display:none;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:16px;font-size:0.8rem;"></div>
+                <div class="form-actions" style="display:flex;justify-content:space-between;align-items:center;">
+                    <button type="button" class="btn btn-secondary btn-sm" id="ghTestBtn" onclick="testGithubConnection()">
+                        <i class="fas fa-plug"></i> Test Connection
+                    </button>
+                    <div style="display:flex;gap:8px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('githubSettingsModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 

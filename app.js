@@ -58,8 +58,12 @@ let currentRole = null;       // 'admin' | 'member' | 'public'
 let currentMemberId = null;
 let members = [];
 let progressEntries = [];
+let presentations = [];
+let reports = [];
 let selectedMemberIds = [];
+let selectedFile = null;
 let db = null;
+let storage = null;
 let membersLoaded = false;
 let progressLoaded = false;
 
@@ -115,6 +119,7 @@ async function initFirestore() {
     try {
         firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
+        storage = firebase.storage();
 
         // Enable offline persistence for better performance
         try { await db.enablePersistence(); } catch (e) { /* OK if fails */ }
@@ -192,6 +197,24 @@ function setupRealtimeListeners() {
         if (currentRole) renderAll();
     }, err => {
         console.error('Progress listener error:', err);
+    });
+
+    // Presentations listener
+    db.collection('presentations').onSnapshot(snapshot => {
+        presentations = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+        presentations.sort((a, b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+        if (currentRole) renderFiles('presentations');
+    }, err => {
+        console.error('Presentations listener error:', err);
+    });
+
+    // Reports listener
+    db.collection('reports').onSnapshot(snapshot => {
+        reports = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+        reports.sort((a, b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+        if (currentRole) renderFiles('reports');
+    }, err => {
+        console.error('Reports listener error:', err);
     });
 }
 
@@ -418,6 +441,8 @@ function buildNavigation() {
         { id: 'team', icon: 'fa-users', label: 'Team Members' },
         { id: 'progress', icon: 'fa-clipboard-list', label: 'Work Progress' },
         { id: 'weekly', icon: 'fa-calendar-week', label: 'Weekly View' },
+        { id: 'presentations', icon: 'fa-file-powerpoint', label: 'Presentations' },
+        { id: 'reports', icon: 'fa-file-alt', label: 'Reports' },
     ];
 
     nav.innerHTML = items.map((item, i) =>
@@ -454,6 +479,8 @@ function renderAll() {
     renderTeam();
     renderWorkProgress();
     renderWeeklyView();
+    renderFiles('presentations');
+    renderFiles('reports');
 }
 
 // ===== Dashboard =====
@@ -1131,10 +1158,13 @@ function confirmDeleteProgress(id) {
 
 // Close modals on backdrop click
 document.addEventListener('DOMContentLoaded', () => {
-    ['memberModal', 'progressModal', 'confirmModal'].forEach(id => {
-        document.getElementById(id).addEventListener('click', function(e) {
-            if (e.target === this) closeModal(id);
-        });
+    ['memberModal', 'progressModal', 'confirmModal', 'uploadModal', 'githubSettingsModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', function(e) {
+                if (e.target === this) closeModal(id);
+            });
+        }
     });
 });
 
@@ -1182,4 +1212,760 @@ function showToast(message, type = 'success') {
         toast.style.transition = '0.3s ease';
         setTimeout(() => toast.remove(), 300);
     }, 2500);
+}
+
+// ===== FILE MANAGEMENT (Presentations & Reports) =====
+
+function getFileTypeInfo(fileName) {
+    const ext = fileName.split('.').pop().toLowerCase();
+    const map = {
+        ppt:  { icon: 'fa-file-powerpoint', cls: 'ppt', label: 'PPT' },
+        pptx: { icon: 'fa-file-powerpoint', cls: 'ppt', label: 'PPTX' },
+        pdf:  { icon: 'fa-file-pdf',        cls: 'pdf', label: 'PDF' },
+        doc:  { icon: 'fa-file-word',        cls: 'doc', label: 'DOC' },
+        docx: { icon: 'fa-file-word',        cls: 'doc', label: 'DOCX' },
+        xls:  { icon: 'fa-file-excel',       cls: 'xls', label: 'XLS' },
+        xlsx: { icon: 'fa-file-excel',       cls: 'xls', label: 'XLSX' },
+        txt:  { icon: 'fa-file-alt',         cls: 'other', label: 'TXT' },
+        csv:  { icon: 'fa-file-csv',         cls: 'other', label: 'CSV' },
+    };
+    return map[ext] || { icon: 'fa-file', cls: 'other', label: ext.toUpperCase() };
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+// ===== GITHUB STORAGE CONFIGURATION =====
+const GITHUB_DEFAULTS = {
+    owner: "goyaljatin870",
+    repo: "trackingswe",
+    branch: "main",
+    token: ""
+};
+
+function getGithubConfig() {
+    return {
+        owner: (localStorage.getItem('pp_gh_owner') || GITHUB_DEFAULTS.owner).trim(),
+        repo: (localStorage.getItem('pp_gh_repo') || GITHUB_DEFAULTS.repo).trim(),
+        branch: (localStorage.getItem('pp_gh_branch') || GITHUB_DEFAULTS.branch).trim(),
+        token: (localStorage.getItem('pp_gh_token') || '').trim()
+    };
+}
+
+function openGithubSettings() {
+    const config = getGithubConfig();
+    document.getElementById('ghOwnerInput').value = config.owner;
+    document.getElementById('ghRepoInput').value = config.repo;
+    document.getElementById('ghBranchInput').value = config.branch;
+    document.getElementById('ghTokenInput').value = config.token;
+    const testResult = document.getElementById('ghTestResult');
+    if (testResult) {
+        testResult.style.display = 'none';
+        testResult.innerHTML = '';
+    }
+    openModal('githubSettingsModal');
+}
+
+function saveGithubSettings(e) {
+    e.preventDefault();
+    const owner = document.getElementById('ghOwnerInput').value.trim();
+    const repo = document.getElementById('ghRepoInput').value.trim();
+    const branch = document.getElementById('ghBranchInput').value.trim() || 'main';
+    const token = document.getElementById('ghTokenInput').value.trim();
+
+    localStorage.setItem('pp_gh_owner', owner);
+    localStorage.setItem('pp_gh_repo', repo);
+    localStorage.setItem('pp_gh_branch', branch);
+    localStorage.setItem('pp_gh_token', token);
+
+    updateGithubBanner();
+    closeModal('githubSettingsModal');
+    showToast('GitHub storage settings saved!', 'success');
+}
+
+async function testGithubConnection() {
+    const owner = document.getElementById('ghOwnerInput').value.trim();
+    const repo = document.getElementById('ghRepoInput').value.trim();
+    const token = document.getElementById('ghTokenInput').value.trim();
+    const resultEl = document.getElementById('ghTestResult');
+    const testBtn = document.getElementById('ghTestBtn');
+
+    if (!owner || !repo) {
+        resultEl.style.display = 'block';
+        resultEl.style.background = 'rgba(239, 68, 68, 0.1)';
+        resultEl.style.color = 'var(--danger)';
+        resultEl.innerHTML = '<i class="fas fa-times-circle"></i> Please enter Owner and Repo name.';
+        return;
+    }
+
+    testBtn.disabled = true;
+    testBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+    resultEl.style.display = 'block';
+    resultEl.style.background = 'rgba(99, 102, 241, 0.1)';
+    resultEl.style.color = 'var(--primary)';
+    resultEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking repository on GitHub...';
+
+    try {
+        const headers = { 'Accept': 'application/vnd.github.v3+json' };
+        if (token) headers['Authorization'] = `token ${token}`;
+
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
+        const data = await res.json();
+
+        if (res.ok) {
+            const hasPush = data.permissions ? data.permissions.push : !!token;
+            resultEl.style.background = 'rgba(16, 185, 129, 0.1)';
+            resultEl.style.color = 'var(--success)';
+            resultEl.innerHTML = `<i class="fas fa-check-circle"></i> Connected to <strong>${data.full_name}</strong>! ${hasPush ? '(Push permission verified ✅)' : '(Read-only — token required for uploading)'}`;
+        } else {
+            resultEl.style.background = 'rgba(239, 68, 68, 0.1)';
+            resultEl.style.color = 'var(--danger)';
+            resultEl.innerHTML = `<i class="fas fa-times-circle"></i> GitHub error: ${data.message || 'Repository not found'}`;
+        }
+    } catch (err) {
+        resultEl.style.background = 'rgba(239, 68, 68, 0.1)';
+        resultEl.style.color = 'var(--danger)';
+        resultEl.innerHTML = `<i class="fas fa-times-circle"></i> Connection failed: ${err.message}`;
+    } finally {
+        testBtn.disabled = false;
+        testBtn.innerHTML = '<i class="fas fa-plug"></i> Test Connection';
+    }
+}
+
+function updateGithubBanner() {
+    const config = getGithubConfig();
+    const repoEl = document.getElementById('ghBannerRepo');
+    const statusEl = document.getElementById('ghBannerStatus');
+
+    if (repoEl) repoEl.textContent = `${config.owner}/${config.repo}`;
+    if (statusEl) {
+        if (config.token) {
+            statusEl.className = 'gh-banner-status ready';
+            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Ready to commit & store';
+        } else {
+            statusEl.className = 'gh-banner-status warning';
+            statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Token needed to upload (Click Configure)';
+        }
+    }
+}
+
+// ===== UPLOAD MODAL & SOURCE TOGGLE =====
+let currentUploadSource = 'file';
+
+function switchUploadSource(source) {
+    currentUploadSource = source;
+    const btnFile = document.getElementById('btnSourceFile');
+    const btnLink = document.getElementById('btnSourceLink');
+    const fileGroup = document.getElementById('fileSourceGroup');
+    const linkGroup = document.getElementById('linkSourceGroup');
+
+    if (source === 'file') {
+        btnFile.classList.add('active');
+        btnLink.classList.remove('active');
+        fileGroup.style.display = '';
+        linkGroup.style.display = 'none';
+    } else {
+        btnLink.classList.add('active');
+        btnFile.classList.remove('active');
+        fileGroup.style.display = 'none';
+        linkGroup.style.display = 'block';
+        const urlInput = document.getElementById('uploadUrlInput');
+        if (urlInput) urlInput.focus();
+    }
+}
+
+function openUploadModal(type) {
+    document.getElementById('uploadType').value = type;
+    document.getElementById('uploadModalTitle').textContent =
+        type === 'presentation' ? 'Upload Presentation to GitHub' : 'Upload Report to GitHub';
+    document.getElementById('dropZoneHint').textContent =
+        type === 'presentation'
+            ? 'PPT, PPTX, PDF (Max 50MB)'
+            : 'PDF, DOC, DOCX, XLS, XLSX, TXT, CSV (Max 50MB)';
+    document.getElementById('uploadFormData').reset();
+    removeSelectedFile();
+    const urlInput = document.getElementById('uploadUrlInput');
+    if (urlInput) urlInput.value = '';
+    switchUploadSource('file');
+    updateGithubBanner();
+    document.getElementById('uploadProgress').style.display = 'none';
+    const submitBtn = document.getElementById('uploadSubmitBtn');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
+    openModal('uploadModal');
+    initDropZone();
+}
+
+function closeUploadModal() {
+    closeModal('uploadModal');
+    removeSelectedFile();
+    const urlInput = document.getElementById('uploadUrlInput');
+    if (urlInput) urlInput.value = '';
+}
+
+function initDropZone() {
+    const dropZone = document.getElementById('dropZone');
+    if (!dropZone) return;
+
+    // Remove old listeners by cloning
+    const newDropZone = dropZone.cloneNode(true);
+    dropZone.parentNode.replaceChild(newDropZone, dropZone);
+    const newFileInput = newDropZone.querySelector('#fileInput');
+
+    newDropZone.addEventListener('click', () => newFileInput.click());
+
+    newDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        newDropZone.classList.add('drag-over');
+    });
+
+    newDropZone.addEventListener('dragleave', () => {
+        newDropZone.classList.remove('drag-over');
+    });
+
+    newDropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        newDropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) {
+            handleFileSelect(e.dataTransfer.files[0]);
+        }
+    });
+
+    newFileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+}
+
+function handleFileSelect(file) {
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+        showToast('File is too large. Maximum size is 50MB.', 'error');
+        return;
+    }
+
+    selectedFile = file;
+    const info = getFileTypeInfo(file.name);
+
+    document.getElementById('dropZone').style.display = 'none';
+    const selectedEl = document.getElementById('selectedFile');
+    selectedEl.style.display = 'flex';
+    document.getElementById('selectedFileIcon').className = `fas ${info.icon}`;
+    document.getElementById('selectedFileName').textContent = file.name;
+    document.getElementById('selectedFileSize').textContent = formatFileSize(file.size);
+
+    const titleInput = document.getElementById('uploadTitle');
+    if (!titleInput.value.trim()) {
+        titleInput.value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+    }
+}
+
+function removeSelectedFile() {
+    selectedFile = null;
+    const selectedEl = document.getElementById('selectedFile');
+    if (selectedEl) selectedEl.style.display = 'none';
+    const dropZone = document.getElementById('dropZone');
+    if (dropZone) dropZone.style.display = '';
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) fileInput.value = '';
+}
+
+// ===== GITHUB FILE UPLOAD HANDLER =====
+async function handleFileUpload(e) {
+    e.preventDefault();
+
+    const type = document.getElementById('uploadType').value;
+    const title = document.getElementById('uploadTitle').value.trim();
+    const collection = type === 'presentation' ? 'presentations' : 'reports';
+    const submitBtn = document.getElementById('uploadSubmitBtn');
+
+    // Case 1: Web Link (Google Slides, Canva, Drive link, etc.)
+    if (currentUploadSource === 'link') {
+        const urlInput = document.getElementById('uploadUrlInput');
+        const url = urlInput ? urlInput.value.trim() : '';
+        if (!url) {
+            showToast('Please enter a valid link URL', 'error');
+            return;
+        }
+
+        let fileName = 'Presentation.pptx';
+        if (url.includes('docs.google.com/presentation')) {
+            fileName = 'Google Slides.pptx';
+        } else if (url.includes('docs.google.com/document')) {
+            fileName = 'Google Docs.docx';
+        } else if (url.toLowerCase().endsWith('.pdf') || url.includes('.pdf?')) {
+            fileName = 'Document.pdf';
+        } else if (url.toLowerCase().endsWith('.pptx') || url.toLowerCase().endsWith('.ppt')) {
+            fileName = 'Presentation.pptx';
+        } else if (type === 'report') {
+            fileName = 'Report.pdf';
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        try {
+            await db.collection(collection).add({
+                title: title,
+                fileName: fileName,
+                fileUrl: url,
+                isLink: true,
+                storageType: 'link',
+                storagePath: null,
+                fileSize: 0,
+                uploadDate: new Date().toISOString(),
+            });
+
+            closeUploadModal();
+            showToast(`${type === 'presentation' ? 'Presentation' : 'Report'} link saved!`, 'success');
+        } catch (err) {
+            console.error('Save link error:', err);
+            showToast('Failed to save link: ' + err.message, 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
+        }
+        return;
+    }
+
+    // Case 2: File Upload to GitHub Repository
+    if (!selectedFile) {
+        showToast('Please select a file to upload', 'error');
+        return;
+    }
+
+    const config = getGithubConfig();
+    if (!config.token) {
+        showToast('GitHub token required to upload files. Please configure your token.', 'error');
+        openGithubSettings();
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading to GitHub...';
+
+    const progressEl = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('uploadProgressFill');
+    const progressText = document.getElementById('uploadProgressText');
+    progressEl.style.display = 'block';
+    progressFill.style.width = '20%';
+    progressText.textContent = 'Reading file...';
+
+    try {
+        // Step 1: Read file as Base64
+        const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(selectedFile);
+        });
+
+        progressFill.style.width = '50%';
+        progressText.textContent = `Committing to ${config.owner}/${config.repo}...`;
+
+        // Step 2: Sanitize file name and create path in repo
+        const cleanName = selectedFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const filePath = `uploads/${collection}/${Date.now()}_${cleanName}`;
+
+        // Step 3: Call GitHub Contents API
+        const ghUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${filePath}`;
+        const commitBody = {
+            message: `Upload ${selectedFile.name} [ProjectPulse]`,
+            content: base64Data,
+            branch: config.branch
+        };
+
+        const ghRes = await fetch(ghUrl, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${config.token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(commitBody)
+        });
+
+        const ghData = await ghRes.json();
+
+        if (!ghRes.ok) {
+            throw new Error(ghData.message || `GitHub error: HTTP ${ghRes.status}`);
+        }
+
+        progressFill.style.width = '85%';
+        progressText.textContent = 'Saving to database...';
+
+        // Step 4: Construct direct raw and CDN URLs
+        const rawUrl = `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${filePath}`;
+        const cdnUrl = `https://cdn.jsdelivr.net/gh/${config.owner}/${config.repo}@${config.branch}/${filePath}`;
+        const sha = ghData.content ? ghData.content.sha : '';
+        const htmlUrl = ghData.content ? ghData.content.html_url : `https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${filePath}`;
+
+        // Step 5: Save record to Firestore
+        await db.collection(collection).add({
+            title: title,
+            fileName: selectedFile.name,
+            fileUrl: rawUrl,
+            cdnUrl: cdnUrl,
+            githubPath: filePath,
+            githubSha: sha,
+            githubHtmlUrl: htmlUrl,
+            storageType: 'github',
+            fileSize: selectedFile.size,
+            uploadDate: new Date().toISOString(),
+        });
+
+        progressFill.style.width = '100%';
+        progressText.textContent = 'Done!';
+
+        setTimeout(() => {
+            closeUploadModal();
+            showToast(`Uploaded to GitHub (${config.repo}) successfully!`, 'success');
+        }, 300);
+
+    } catch (err) {
+        console.error('GitHub upload error:', err);
+        let errorMsg = err.message;
+        if (errorMsg.includes('Bad credentials')) {
+            errorMsg = 'Invalid GitHub token. Please verify your token in GitHub Settings.';
+        }
+        showToast('Upload failed: ' + errorMsg, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-upload"></i> Upload to GitHub';
+        progressEl.style.display = 'none';
+    }
+}
+
+// ===== RENDER FILE CARDS =====
+function renderFiles(type) {
+    const files = type === 'presentations' ? presentations : reports;
+    const grid = document.getElementById(type + 'Grid');
+    if (!grid) return;
+
+    const emptyIcon = type === 'presentations' ? 'fa-file-powerpoint' : 'fa-file-alt';
+    const emptyLabel = type === 'presentations' ? 'No presentations uploaded yet' : 'No reports uploaded yet';
+
+    if (files.length === 0) {
+        grid.innerHTML = `<p class="empty-state" style="grid-column:1/-1;"><i class="fas ${emptyIcon}"></i>${emptyLabel}</p>`;
+        return;
+    }
+
+    grid.innerHTML = files.map(file => {
+        const info = getFileTypeInfo(file.fileName);
+        const uploadDate = file.uploadDate ? formatDate(file.uploadDate) : 'Recently';
+        const fileSize = file.fileSize > 0 ? formatFileSize(file.fileSize) : (file.isLink ? 'Web Link' : '');
+        const deleteBtn = currentRole === 'admin'
+            ? `<button class="delete-file-btn" onclick="event.stopPropagation(); deleteFile('${type}', '${file.docId}')" title="Delete"><i class="fas fa-trash"></i> Delete</button>`
+            : '';
+        const ghBtn = file.githubHtmlUrl
+            ? `<a href="${file.githubHtmlUrl}" target="_blank" onclick="event.stopPropagation()" title="View on GitHub"><i class="fab fa-github"></i> GitHub</a>`
+            : '';
+
+        return `
+            <div class="file-card" onclick="viewFile('${file.docId}', '${type}')">
+                <div class="file-card-preview ${info.cls}">
+                    <i class="fas ${info.icon}"></i>
+                    <span class="file-ext-badge">${info.label}</span>
+                </div>
+                <div class="file-card-body">
+                    <h4 title="${file.title}">${file.title}</h4>
+                    <div class="file-card-meta">
+                        <span><i class="fas fa-calendar"></i> ${uploadDate}</span>
+                        ${fileSize ? `<span><i class="fas ${file.isLink ? 'fa-link' : 'fa-weight-hanging'}"></i> ${fileSize}</span>` : ''}
+                    </div>
+                    <div class="file-card-actions">
+                        <button onclick="event.stopPropagation(); viewFile('${file.docId}', '${type}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button onclick="event.stopPropagation(); viewFile('${file.docId}', '${type}', true)" title="Open in Fullscreen">
+                            <i class="fas fa-expand"></i> Fullscreen
+                        </button>
+                        <a href="${file.fileUrl}" target="_blank" download onclick="event.stopPropagation()">
+                            <i class="fas ${file.isLink ? 'fa-external-link-alt' : 'fa-download'}"></i> ${file.isLink ? 'Open' : 'Download'}
+                        </a>
+                        ${ghBtn}
+                        ${deleteBtn}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ===== FILE VIEWER (Multi-Engine & Fullscreen) =====
+let currentViewerFile = null;
+let currentViewerEngine = 'office'; // 'office' | 'google'
+
+function viewFile(docId, type, startFullscreen = false) {
+    const files = type === 'presentations' ? presentations : reports;
+    const file = files.find(f => f.docId === docId);
+    if (!file) return;
+
+    currentViewerFile = file;
+    const info = getFileTypeInfo(file.fileName);
+    const ext = file.fileName.split('.').pop().toLowerCase();
+    const isOffice = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(ext);
+
+    document.getElementById('viewerTitle').textContent = file.title;
+    document.getElementById('viewerIcon').className = `fas ${info.icon}`;
+
+    // Always use fileUrl (raw.githubusercontent.com) - avoid 403-forbidden CDN URLs!
+    const directFileUrl = file.fileUrl;
+
+    const downloadBtn = document.getElementById('viewerDownload');
+    const newTabBtn = document.getElementById('viewerNewTab');
+    const fallbackOpen = document.getElementById('viewerFallbackOpen');
+    const fallbackDownload = document.getElementById('viewerFallbackDownload');
+
+    if (file.isLink) {
+        if (downloadBtn) downloadBtn.style.display = 'none';
+        if (fallbackDownload) fallbackDownload.style.display = 'none';
+        if (newTabBtn) newTabBtn.href = file.fileUrl;
+        if (fallbackOpen) {
+            fallbackOpen.href = file.fileUrl;
+            fallbackOpen.innerHTML = '<i class="fas fa-external-link-alt"></i> Open Link';
+        }
+    } else {
+        if (downloadBtn) {
+            downloadBtn.style.display = '';
+            downloadBtn.href = directFileUrl;
+        }
+        if (fallbackDownload) {
+            fallbackDownload.style.display = '';
+            fallbackDownload.href = directFileUrl;
+        }
+        if (newTabBtn) newTabBtn.href = file.githubHtmlUrl || directFileUrl;
+        if (fallbackOpen) {
+            fallbackOpen.href = directFileUrl;
+            fallbackOpen.innerHTML = '<i class="fas fa-external-link-alt"></i> Open File Directly';
+        }
+    }
+
+    // Engine toggle (only for Office / PPTX / DOCX files)
+    const engineToggle = document.getElementById('viewerEngineToggle');
+    if (engineToggle) {
+        if (isOffice && !file.isLink) {
+            engineToggle.style.display = 'inline-flex';
+            // Update active state on buttons
+            const btnOffice = document.getElementById('btnEngineOffice');
+            const btnGoogle = document.getElementById('btnEngineGoogle');
+            if (btnOffice && btnGoogle) {
+                btnOffice.classList.toggle('active', currentViewerEngine === 'office');
+                btnGoogle.classList.toggle('active', currentViewerEngine === 'google');
+            }
+        } else {
+            engineToggle.style.display = 'none';
+        }
+    }
+
+    // Show loading overlay
+    const loadingEl = document.getElementById('viewerLoading');
+    if (loadingEl) {
+        loadingEl.classList.remove('hidden');
+        const loadText = document.getElementById('viewerLoadingText');
+        if (loadText) {
+            loadText.textContent = isOffice
+                ? `Loading presentation preview via ${currentViewerEngine === 'office' ? 'Microsoft Office' : 'Google Docs'}...`
+                : 'Loading document preview...';
+        }
+    }
+
+    // Load iframe
+    loadViewerIframe(currentViewerEngine);
+
+    document.getElementById('viewerModal').classList.add('active');
+
+    if (startFullscreen) {
+        setTimeout(() => toggleViewerFullscreen(true), 200);
+    }
+}
+
+function loadViewerIframe(engine) {
+    if (!currentViewerFile) return;
+    const file = currentViewerFile;
+    const ext = file.fileName.split('.').pop().toLowerCase();
+    const iframe = document.getElementById('viewerFrame');
+    // Ensure we use raw.githubusercontent.com or direct URL
+    const targetUrl = file.fileUrl;
+
+    let embedUrl = targetUrl;
+
+    if (targetUrl.includes('docs.google.com/presentation/d/')) {
+        embedUrl = targetUrl.replace(/\/edit.*$/, '/embed?start=false&loop=false&delayms=3000')
+                            .replace(/\/view.*$/, '/embed?start=false&loop=false&delayms=3000');
+        if (!embedUrl.includes('/embed')) embedUrl += '/embed';
+    } else if (targetUrl.includes('docs.google.com/document/d/')) {
+        embedUrl = targetUrl.replace(/\/edit.*$/, '/preview')
+                            .replace(/\/view.*$/, '/preview');
+    } else if (targetUrl.includes('drive.google.com/file/d/')) {
+        embedUrl = targetUrl.replace(/\/view.*$/, '/preview');
+    } else if (['pdf'].includes(ext)) {
+        embedUrl = targetUrl;
+    } else if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(ext)) {
+        if (engine === 'office') {
+            // Microsoft Office Online Viewer - native PowerPoint rendering!
+            embedUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(targetUrl)}`;
+        } else {
+            // Google Docs Viewer alternate
+            embedUrl = `https://docs.google.com/gview?url=${encodeURIComponent(targetUrl)}&embedded=true`;
+        }
+    }
+
+    iframe.src = embedUrl;
+
+    // Safety timeout: auto-hide loading overlay after 2.5s so user can interact
+    setTimeout(() => {
+        const loadingEl = document.getElementById('viewerLoading');
+        if (loadingEl) loadingEl.classList.add('hidden');
+    }, 2500);
+}
+
+function switchViewerEngine(engine) {
+    currentViewerEngine = engine;
+    const btnOffice = document.getElementById('btnEngineOffice');
+    const btnGoogle = document.getElementById('btnEngineGoogle');
+
+    if (btnOffice && btnGoogle) {
+        btnOffice.classList.toggle('active', engine === 'office');
+        btnGoogle.classList.toggle('active', engine === 'google');
+    }
+
+    const loadingEl = document.getElementById('viewerLoading');
+    if (loadingEl) {
+        loadingEl.classList.remove('hidden');
+        const loadText = document.getElementById('viewerLoadingText');
+        if (loadText) {
+            loadText.textContent = `Switching to ${engine === 'office' ? 'Microsoft Office' : 'Google Docs'} Viewer...`;
+        }
+    }
+
+    loadViewerIframe(engine);
+}
+
+function onViewerIframeLoad() {
+    const loadingEl = document.getElementById('viewerLoading');
+    if (loadingEl) {
+        setTimeout(() => {
+            loadingEl.classList.add('hidden');
+        }, 400);
+    }
+}
+
+function toggleViewerFullscreen(force) {
+    const modal = document.getElementById('viewerModal');
+    const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+
+    if (force === true || (!isFull && force !== false)) {
+        if (modal.requestFullscreen) {
+            modal.requestFullscreen().catch(() => {});
+        } else if (modal.webkitRequestFullscreen) {
+            modal.webkitRequestFullscreen();
+        } else if (modal.mozRequestFullScreen) {
+            modal.mozRequestFullScreen();
+        } else if (modal.msRequestFullscreen) {
+            modal.msRequestFullscreen();
+        }
+    } else if (force === false || isFull) {
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+}
+
+// Sync Fullscreen icon with browser fullscreen state
+['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+    document.addEventListener(evt, () => {
+        const icon = document.getElementById('viewerFullscreenIcon');
+        if (!icon) return;
+        const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        if (isFull) {
+            icon.classList.remove('fa-expand');
+            icon.classList.add('fa-compress');
+        } else {
+            icon.classList.remove('fa-compress');
+            icon.classList.add('fa-expand');
+        }
+    });
+});
+
+function closeViewer() {
+    // Exit browser fullscreen if active
+    if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+
+    document.getElementById('viewerModal').classList.remove('active');
+    const iframe = document.getElementById('viewerFrame');
+    if (iframe) iframe.src = '';
+    const loadingEl = document.getElementById('viewerLoading');
+    if (loadingEl) loadingEl.classList.add('hidden');
+    currentViewerFile = null;
+}
+
+document.addEventListener('keydown', (e) => {
+    const viewerActive = document.getElementById('viewerModal').classList.contains('active');
+    if (viewerActive) {
+        if (e.key === 'Escape') {
+            closeViewer();
+        } else if (e.key === 'f' || e.key === 'F') {
+            // Toggle fullscreen with 'f' key if not typing in an input
+            if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                toggleViewerFullscreen();
+            }
+        }
+    }
+});
+
+// ===== DELETE FILE (GitHub + Firestore) =====
+function deleteFile(type, docId) {
+    const files = type === 'presentations' ? presentations : reports;
+    const file = files.find(f => f.docId === docId);
+    if (!file) return;
+
+    document.getElementById('confirmMessage').textContent = `Delete "${file.title}"? This will also delete it from GitHub.`;
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        try {
+            const config = getGithubConfig();
+            // Delete from GitHub repository if path and sha exist and token available
+            if (file.githubPath && file.githubSha && config.token) {
+                try {
+                    await fetch(`https://api.github.com/repos/${config.owner}/${config.repo}/contents/${file.githubPath}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `token ${config.token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: `Delete ${file.fileName} [ProjectPulse]`,
+                            sha: file.githubSha,
+                            branch: config.branch
+                        })
+                    });
+                } catch (ghErr) {
+                    console.warn('GitHub file delete warning:', ghErr);
+                }
+            }
+
+            // Delete record from Firestore
+            await db.collection(type).doc(docId).delete();
+            closeModal('confirmModal');
+            showToast('File deleted successfully', 'error');
+        } catch (err) {
+            console.error('Delete error:', err);
+            showToast('Delete failed: ' + err.message, 'error');
+        }
+    };
+    openModal('confirmModal');
 }
