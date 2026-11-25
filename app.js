@@ -1656,8 +1656,8 @@ async function handleFileUpload(e) {
         progressFill.style.width = '85%';
         progressText.textContent = 'Saving to database...';
 
-        // Step 4: Construct direct raw and CDN URLs
-        const rawUrl = `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${filePath}`;
+        // Step 4: Construct direct Pages and CDN URLs (avoids raw.githubusercontent.com ECONNRESET)
+        const pagesUrl = `https://${config.owner}.github.io/${config.repo}/${filePath}`;
         const cdnUrl = `https://cdn.jsdelivr.net/gh/${config.owner}/${config.repo}@${config.branch}/${filePath}`;
         const sha = ghData.content ? ghData.content.sha : '';
         const htmlUrl = ghData.content ? ghData.content.html_url : `https://github.com/${config.owner}/${config.repo}/blob/${config.branch}/${filePath}`;
@@ -1666,7 +1666,7 @@ async function handleFileUpload(e) {
         await db.collection(collection).add({
             title: title,
             fileName: selectedFile.name,
-            fileUrl: rawUrl,
+            fileUrl: pagesUrl,
             cdnUrl: cdnUrl,
             githubPath: filePath,
             githubSha: sha,
@@ -1747,7 +1747,7 @@ function renderFiles(type) {
                         <button onclick="event.stopPropagation(); viewFile('${fileId}', '${type}', true)" title="Open in Fullscreen">
                             <i class="fas fa-expand"></i> Fullscreen
                         </button>
-                        <a href="${file.fileUrl}" target="_blank" download onclick="event.stopPropagation()">
+                        <a href="${getFileAccessibleUrl(file)}" target="_blank" download onclick="event.stopPropagation()">
                             <i class="fas ${file.isLink ? 'fa-external-link-alt' : 'fa-download'}"></i> ${file.isLink ? 'Open' : 'Download'}
                         </a>
                         ${ghBtn}
@@ -1757,6 +1757,70 @@ function renderFiles(type) {
             </div>
         `;
     }).join('');
+}
+
+// ===== ACCESSIBLE URL RESOLVERS (Bypasses raw.githubusercontent.com ECONNRESET) =====
+function getFileAccessibleUrl(file) {
+    if (!file) return '';
+    if (file.isLink) return file.fileUrl;
+
+    const path = (file.githubPath || '').replace(/^\//, '');
+    const owner = (localStorage.getItem('pp_gh_owner') || GITHUB_DEFAULTS.owner).trim();
+    const repo = (localStorage.getItem('pp_gh_repo') || GITHUB_DEFAULTS.repo).trim();
+
+    // 1. If currently hosted on GitHub Pages:
+    if (window.location.hostname.endsWith('github.io')) {
+        if (path) {
+            const basePath = window.location.pathname.replace(/\/index\.html$/, '').replace(/\/$/, '');
+            return `${window.location.origin}${basePath}/${path}`;
+        }
+    }
+
+    // 2. If running locally (localhost / 127.0.0.1):
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        if (path) {
+            return `./${path}`;
+        }
+    }
+
+    // 3. Fallback to public GitHub Pages CDN URL
+    if (path) {
+        return `https://${owner}.github.io/${repo}/${path}`;
+    }
+
+    // 4. If fileUrl contains raw.githubusercontent.com, rewrite to GitHub Pages URL
+    if (file.fileUrl && file.fileUrl.includes('raw.githubusercontent.com')) {
+        const parts = file.fileUrl.split('raw.githubusercontent.com/')[1].split('/');
+        const fOwner = parts[0];
+        const fRepo = parts[1];
+        const relPath = parts.slice(3).join('/');
+        return `https://${fOwner}.github.io/${fRepo}/${relPath}`;
+    }
+
+    return file.cdnUrl || file.fileUrl;
+}
+
+function getPublicHttpsUrl(file) {
+    if (!file) return '';
+    if (file.isLink) return file.fileUrl;
+
+    const path = (file.githubPath || '').replace(/^\//, '');
+    const owner = (localStorage.getItem('pp_gh_owner') || GITHUB_DEFAULTS.owner).trim();
+    const repo = (localStorage.getItem('pp_gh_repo') || GITHUB_DEFAULTS.repo).trim();
+
+    if (path) {
+        return `https://${owner}.github.io/${repo}/${path}`;
+    }
+
+    if (file.fileUrl && file.fileUrl.includes('raw.githubusercontent.com')) {
+        const parts = file.fileUrl.split('raw.githubusercontent.com/')[1].split('/');
+        const fOwner = parts[0];
+        const fRepo = parts[1];
+        const relPath = parts.slice(3).join('/');
+        return `https://${fOwner}.github.io/${fRepo}/${relPath}`;
+    }
+
+    return file.cdnUrl || file.fileUrl;
 }
 
 // ===== FILE VIEWER (Multi-Engine & Fullscreen) =====
@@ -1784,8 +1848,8 @@ function viewFile(docId, type, startFullscreen = false) {
         vDeleteBtn.style.display = currentRole === 'admin' ? 'inline-flex' : 'none';
     }
 
-    // Always use fileUrl (raw.githubusercontent.com) - avoid 403-forbidden CDN URLs!
-    const directFileUrl = file.fileUrl;
+    // Accessible direct URL (local or GitHub Pages CDN)
+    const directFileUrl = getFileAccessibleUrl(file);
 
     const downloadBtn = document.getElementById('viewerDownload');
     const newTabBtn = document.getElementById('viewerNewTab');
@@ -1860,29 +1924,35 @@ function loadViewerIframe(engine) {
     const file = currentViewerFile;
     const ext = file.fileName.split('.').pop().toLowerCase();
     const iframe = document.getElementById('viewerFrame');
-    // Ensure we use raw.githubusercontent.com or direct URL
-    const targetUrl = file.fileUrl;
+    const directFileUrl = getFileAccessibleUrl(file);
+    const publicUrl = getPublicHttpsUrl(file);
 
-    let embedUrl = targetUrl;
+    let embedUrl = directFileUrl;
 
-    if (targetUrl.includes('docs.google.com/presentation/d/')) {
-        embedUrl = targetUrl.replace(/\/edit.*$/, '/embed?start=false&loop=false&delayms=3000')
-                            .replace(/\/view.*$/, '/embed?start=false&loop=false&delayms=3000');
-        if (!embedUrl.includes('/embed')) embedUrl += '/embed';
-    } else if (targetUrl.includes('docs.google.com/document/d/')) {
-        embedUrl = targetUrl.replace(/\/edit.*$/, '/preview')
-                            .replace(/\/view.*$/, '/preview');
-    } else if (targetUrl.includes('drive.google.com/file/d/')) {
-        embedUrl = targetUrl.replace(/\/view.*$/, '/preview');
+    if (file.isLink) {
+        const targetUrl = file.fileUrl;
+        if (targetUrl.includes('docs.google.com/presentation/d/')) {
+            embedUrl = targetUrl.replace(/\/edit.*$/, '/embed?start=false&loop=false&delayms=3000')
+                                .replace(/\/view.*$/, '/embed?start=false&loop=false&delayms=3000');
+            if (!embedUrl.includes('/embed')) embedUrl += '/embed';
+        } else if (targetUrl.includes('docs.google.com/document/d/')) {
+            embedUrl = targetUrl.replace(/\/edit.*$/, '/preview')
+                                .replace(/\/view.*$/, '/preview');
+        } else if (targetUrl.includes('drive.google.com/file/d/')) {
+            embedUrl = targetUrl.replace(/\/view.*$/, '/preview');
+        } else {
+            embedUrl = targetUrl;
+        }
     } else if (['pdf'].includes(ext)) {
-        embedUrl = targetUrl;
+        // Direct browser PDF renderer with no connection resets
+        embedUrl = directFileUrl;
     } else if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(ext)) {
         if (engine === 'office') {
-            // Microsoft Office Online Viewer - native PowerPoint rendering!
-            embedUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(targetUrl)}`;
+            // Microsoft Office Online Viewer - uses public HTTPS GitHub Pages URL
+            embedUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`;
         } else {
-            // Google Docs Viewer alternate
-            embedUrl = `https://docs.google.com/gview?url=${encodeURIComponent(targetUrl)}&embedded=true`;
+            // Google Docs Viewer alternate - uses public HTTPS GitHub Pages URL
+            embedUrl = `https://docs.google.com/gview?url=${encodeURIComponent(publicUrl)}&embedded=true`;
         }
     }
 
