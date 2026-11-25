@@ -25,9 +25,15 @@ const WEEK_TITLES = {
     2: "Core Backend + Auth",
     3: "Ingestion & Comparison",
     4: "Reviewer Console + Provenance",
-    5: "Deployment & Prototype Polish"
+    5: "Deployment & Prototype Polish",
+    6: "Project Foundation & SPA Setup",
+    7: "Authentication & Ingestion Pipeline",
+    8: "Semantic Comparison & Verification UI",
+    9: "Multi-University Scrapers & Source Management",
+    10: "Blockchain Provenance & Reviewer Benchmark",
+    11: "Edge-Case Hardening & Final Integration (v1.0-RC)"
 };
-const CURRENT_WEEK = 5;
+const CURRENT_WEEK = 11;
 
 const DEFAULTS = {
     members: [
@@ -62,11 +68,48 @@ const DEFAULTS = {
         { id: 16, title: "Provenance (Merkle tree/hash chain) service, reviewer API endpoints", desc: "Developed cryptographic provenance tracking via Merkle tree / hash chains for audit trails and built reviewer REST APIs.", memberIds: [12], week: 4, status: "Completed", date: "2026-09-04", hours: 7 },
         { id: 17, title: "pytest suite writing (backend/finalsay/tests), evaluation harness testing", desc: "Authored automated pytest suite for backend tests and verified the evaluation harness for notice authenticity classification.", memberIds: [11], week: 4, status: "Completed", date: "2026-09-05", hours: 6 },
 
-        // Week 5 — Deployment & Prototype Polish (Current Week)
-        { id: 18, title: "End-to-end demo walkthrough, prototype presentation prep, final integration testing", desc: "Conducting complete end-to-end demo run-throughs, preparing pitch presentation deck, and executing final integration testing.", memberIds: [10], week: 5, status: "In Progress", date: "2026-09-14", hours: 5 },
-        { id: 19, title: "UI polish, PWA/manifest setup, responsive fixes", desc: "Refining visual design aesthetics, configuring PWA web app manifest, and resolving mobile responsiveness edge cases.", memberIds: [9], week: 5, status: "In Progress", date: "2026-09-15", hours: 4 },
-        { id: 20, title: "Docker/Dockerfile, docker-compose (Postgres), health/readiness endpoints, deployment pipeline fix", desc: "Building multi-stage Docker container configs, docker-compose for PostgreSQL, health check probes, and fixing deployment pipeline.", memberIds: [12], week: 5, status: "In Progress", date: "2026-09-16", hours: 5 },
-        { id: 21, title: "Full regression testing (61+ test cases), bug reporting, final QA sign-off", desc: "Running full regression test suite with 61+ test scenarios, reporting defects, and performing final QA sign-off for prototype release.", memberIds: [11], week: 5, status: "In Progress", date: "2026-09-16", hours: 5 },
+        // Week 5 — Deployment & Prototype Polish
+        { id: 18, title: "End-to-end demo walkthrough, prototype presentation prep, final integration testing", desc: "Conducting complete end-to-end demo run-throughs, preparing pitch presentation deck, and executing final integration testing.", memberIds: [10], week: 5, status: "Completed", date: "2026-09-14", hours: 5 },
+        { id: 19, title: "UI polish, PWA/manifest setup, responsive fixes", desc: "Refining visual design aesthetics, configuring PWA web app manifest, and resolving mobile responsiveness edge cases.", memberIds: [9], week: 5, status: "Completed", date: "2026-09-15", hours: 4 },
+        { id: 20, title: "Docker/Dockerfile, docker-compose (Postgres), health/readiness endpoints, deployment pipeline fix", desc: "Building multi-stage Docker container configs, docker-compose for PostgreSQL, health check probes, and fixing deployment pipeline.", memberIds: [12], week: 5, status: "Completed", date: "2026-09-16", hours: 5 },
+        { id: 21, title: "Full regression testing (61+ test cases), bug reporting, final QA sign-off", desc: "Running full regression test suite with 61+ test scenarios, reporting defects, and performing final QA sign-off for prototype release.", memberIds: [11], week: 5, status: "Completed", date: "2026-09-16", hours: 5 },
+
+        // Week 6 / Phase 1 — Project Foundation & Architecture Setup (Sep 20 – Sep 30)
+        { id: 22, title: "SPA scaffold, accessible color hierarchies, typography & base layout shells", desc: "Initialized modern single-page application using React 18, TypeScript, and Vite. Designed modular styling architecture, established accessible color hierarchies, and created core layout shells.", memberIds: [10], week: 6, status: "Completed", date: "2026-09-24", hours: 6 },
+        { id: 23, title: "Navigation bar, header/footer layout, and modular styling architecture", desc: "Implemented responsive header, footer, navigation bar shells, and integrated modular CSS styling system with theme support.", memberIds: [9], week: 6, status: "Completed", date: "2026-09-25", hours: 5 },
+        { id: 24, title: "Relational SQLAlchemy data schema design (Institutions, Notices, NoticeFields, RelationEdges)", desc: "Architected relational data schema in SQLAlchemy for Institutions, Notices, NoticeFields, and RelationEdges; configured SQLite/PostgreSQL connectors.", memberIds: [12], week: 6, status: "Completed", date: "2026-09-27", hours: 6 },
+        { id: 25, title: "FastAPI modular architecture, SQLite/PostgreSQL connectors & test runner harness", desc: "Established modular FastAPI project structure, configured database connectors, and built automated test runner harness.", memberIds: [11], week: 6, status: "Completed", date: "2026-09-29", hours: 6 },
+
+        // Week 7 / Phase 2 — Authentication, Notice Ingestion & Document Pipeline (Oct 01 – Oct 15)
+        { id: 26, title: "Student notice submission page (/submit) with document upload & claim text entry", desc: "Created student notice submission interface allowing document uploads (PDF/images) and raw text claim entries with interactive form validation.", memberIds: [10], week: 7, status: "Completed", date: "2026-10-06", hours: 6 },
+        { id: 27, title: "User auth interfaces (/login, /register), role switching & 1-click demo credential filler", desc: "Developed user authentication interfaces with dynamic role switching (student, reviewer, issuer, admin) and one-click demo account credential filler.", memberIds: [9], week: 7, status: "Completed", date: "2026-10-08", hours: 6 },
+        { id: 28, title: "Initial scraper adapters for Thapar Institute & NIT Jalandhar, PyMuPDF text extraction pipeline", desc: "Built university scraper adapters for Thapar Institute and NIT Jalandhar; engineered PDF text extraction pipeline using PyMuPDF and fallback normalization.", memberIds: [12], week: 7, status: "Completed", date: "2026-10-11", hours: 7 },
+        { id: 29, title: "JWT authentication, password hashing with bcrypt & role enforcement", desc: "Implemented JWT token authentication and bcrypt password hashing with strict role enforcement (student, reviewer, issuer, admin).", memberIds: [11], week: 7, status: "Completed", date: "2026-10-13", hours: 6 },
+
+        // Week 8 / Phase 3 — Semantic Comparison Engine & Verification UI (Oct 16 – Oct 31)
+        { id: 30, title: "Student verification result view (/result/:id) & dynamic status banner logic", desc: "Built core student verification result view (/result/:id) and designed dynamic status banner logic (CONFIRMED, CONTRADICTED, PARTIALLY_SUPPORTED).", memberIds: [10], week: 8, status: "Completed", date: "2026-10-22", hours: 6 },
+        { id: 31, title: "Structured comparison table with field extraction badges (Same/Different) & audit details", desc: "Designed structured comparison table comparing key extracted fields (Notice Date, Deadline, Audience) with side-by-side verification tags and expandable audit details.", memberIds: [9], week: 8, status: "Completed", date: "2026-10-25", hours: 6 },
+        { id: 32, title: "Embedding-based candidate retrieval & lexical overlap scoring", desc: "Developed candidate document retrieval pipeline using NLP embeddings and lexical overlap scoring for candidate ranking.", memberIds: [12], week: 8, status: "Completed", date: "2026-10-27", hours: 7 },
+        { id: 33, title: "Multi-stage comparison engine (comparison.py), temporal taxonomy & confidence gating (GC-4)", desc: "Developed multi-stage comparison engine (comparison.py), temporal relationship taxonomy (consistent, contradictory, superseded, extended, unresolved), and confidence gating (GC-4) for reviewer queue routing.", memberIds: [11], week: 8, status: "Completed", date: "2026-10-30", hours: 7 },
+
+        // Week 9 / Phase 4 — Multi-University Scraping Engine & Source Management (Nov 01 – Nov 10)
+        { id: 34, title: "Official notice explorer (/notices) with institution filtering & keyword search", desc: "Designed official notice explorer interface (/notices) featuring multi-institution filtering, search autocomplete, and date range filters.", memberIds: [10], week: 9, status: "Completed", date: "2026-11-04", hours: 5 },
+        { id: 35, title: "Administrative Source Management dashboard (/admin/sources) with live poll & backfill tracking", desc: "Engineered administrative Source Management dashboard (/admin/sources) featuring live poll triggering, automatic backfill tracking, real-time error logs, and source health badges.", memberIds: [9], week: 9, status: "Completed", date: "2026-11-06", hours: 6 },
+        { id: 36, title: "Multi-portal scrapers (VTU, DU Centenary, Mumbai circulars), HTTP caching & SHA-256 deduplication", desc: "Expanded live scraper engine to support VTU examination notices, DU examination & Centenary Special notices, and University of Mumbai circulars; implemented conditional HTTP caching (ETag, Last-Modified) and SHA-256 deduplication.", memberIds: [12], week: 9, status: "Completed", date: "2026-11-08", hours: 7 },
+        { id: 37, title: "Scraper data normalization, relation edge graph modeling & source health analytics", desc: "Built data normalization pipeline, notice relationship graph modeling, date conflict arbitration, and source health monitoring metrics.", memberIds: [11], week: 9, status: "Completed", date: "2026-11-09", hours: 6 },
+
+        // Week 10 / Phase 5 — Blockchain Provenance & Reviewer Benchmark System (Nov 11 – Nov 18)
+        { id: 38, title: "Provenance verification panel (/provenance) with Merkle proof validation & explorer links", desc: "Implemented Provenance verification panel (/provenance) displaying cryptographic Merkle proof validation and Polygon transaction explorer links.", memberIds: [10], week: 10, status: "Completed", date: "2026-11-13", hours: 5 },
+        { id: 39, title: "Reviewer Benchmark workspace (/reviewer/benchmark) with Cohen's Kappa score metrics & labeling", desc: "Built Reviewer Benchmark curation workspace (/reviewer/benchmark) displaying inter-annotator Cohen's Kappa score analytics, accuracy gauges, and pair-labeling tools.", memberIds: [9], week: 10, status: "Completed", date: "2026-11-15", hours: 6 },
+        { id: 40, title: "Batch daily notice digests & cryptographic Merkle tree root generator", desc: "Built daily notice digest batching service and cryptographic Merkle tree root generator for tamper-evident provenance proofs.", memberIds: [12], week: 10, status: "Completed", date: "2026-11-16", hours: 7 },
+        { id: 41, title: "EVM smart contract anchor service on Polygon Amoy testnet & Cohen's Kappa evaluation service", desc: "Implemented EVM smart contract anchor service targeting Polygon Amoy testnet with local cryptographic verification fallback, and Cohen's Kappa evaluation service for benchmark reliability.", memberIds: [11], week: 10, status: "Completed", date: "2026-11-17", hours: 7 },
+
+        // Week 11 / Phase 6 — Edge-Case Hardening, Scraper Fixes & Final Integration (Nov 19 – Nov 25)
+        // Status: Release Candidate v1.0-RC
+        { id: 42, title: "Comparison verdict accuracy fix (effectiveVerdict resolving to CONFIRMED on match)", desc: "Resolved edge-case discrepancy where matching notices incorrectly displayed CONTRADICTED; implemented effectiveVerdict logic resolving to CONFIRMED when all compared fields or text copies match.", memberIds: [10], week: 11, status: "Completed", date: "2026-11-21", hours: 6 },
+        { id: 43, title: "Role-based navigation 403 redirect fixes, source deletion on /admin/sources & PWA offline cache", desc: "Fixed 403 Forbidden redirects by routing admin and reviewer users directly to designated dashboards; added source deletion actions on /admin/sources and tuned PWA offline caching.", memberIds: [9], week: 11, status: "Completed", date: "2026-11-23", hours: 6 },
+        { id: 44, title: "University scraper resilience (404/410 dead links, scanned PDFs, VTU & DU drive links)", desc: "Hardened scrapers against HTTP 404/410 dead attachments and scanned image PDFs as listing_only/unextractable without poll failure streaks; handled VTU attachment-free posts and DU Google Drive links.", memberIds: [12], week: 11, status: "Completed", date: "2026-11-24", hours: 7 },
+        { id: 45, title: "GenericHtmlNoticeAdapter, SQLite WAL cleanup, 291/291 pytest suite passing (100%) & git push", desc: "Built GenericHtmlNoticeAdapter for dynamic institution onboarding, cleaned SQLite WAL files, verified 100% test pass rate (291/291 tests in 5.41s), and tagged Release Candidate v1.0-RC on GitHub.", memberIds: [11], week: 11, status: "Completed", date: "2026-11-25", hours: 7 },
     ]
 };
 
