@@ -1275,6 +1275,9 @@ function showToast(message, type = 'success') {
 // ===== FILE MANAGEMENT (Presentations & Reports) =====
 
 function getFileTypeInfo(fileName) {
+    if (!fileName || typeof fileName !== 'string') {
+        return { icon: 'fa-file', cls: 'other', label: 'FILE' };
+    }
     const ext = fileName.split('.').pop().toLowerCase();
     const map = {
         ppt:  { icon: 'fa-file-powerpoint', cls: 'ppt', label: 'PPT' },
@@ -1287,7 +1290,7 @@ function getFileTypeInfo(fileName) {
         txt:  { icon: 'fa-file-alt',         cls: 'other', label: 'TXT' },
         csv:  { icon: 'fa-file-csv',         cls: 'other', label: 'CSV' },
     };
-    return map[ext] || { icon: 'fa-file', cls: 'other', label: ext.toUpperCase() };
+    return map[ext] || { icon: 'fa-file', cls: 'other', label: (ext ? ext.toUpperCase() : 'FILE') };
 }
 
 function formatFileSize(bytes) {
@@ -1700,9 +1703,11 @@ async function handleFileUpload(e) {
 
 // ===== RENDER FILE CARDS =====
 function renderFiles(type) {
-    const files = type === 'presentations' ? presentations : reports;
+    const rawFiles = type === 'presentations' ? presentations : reports;
     const grid = document.getElementById(type + 'Grid');
     if (!grid) return;
+
+    const files = (rawFiles || []).filter(f => f && (f.title || f.fileName || f.fileUrl));
 
     const emptyIcon = type === 'presentations' ? 'fa-file-powerpoint' : 'fa-file-alt';
     const emptyLabel = type === 'presentations' ? 'No presentations uploaded yet' : 'No reports uploaded yet';
@@ -1714,7 +1719,9 @@ function renderFiles(type) {
 
     grid.innerHTML = files.map(file => {
         const fileId = file.docId || file.id;
-        const info = getFileTypeInfo(file.fileName);
+        const fileName = file.fileName || (file.githubPath ? file.githubPath.split('/').pop() : 'document.pdf');
+        const fileTitle = file.title || fileName.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ') || 'Untitled Document';
+        const info = getFileTypeInfo(fileName);
         const uploadDate = file.uploadDate ? formatDate(file.uploadDate) : 'Recently';
         const fileSize = file.fileSize > 0 ? formatFileSize(file.fileSize) : (file.isLink ? 'Web Link' : '');
         const quickDelete = currentRole === 'admin'
@@ -1735,7 +1742,7 @@ function renderFiles(type) {
                     <span class="file-ext-badge">${info.label}</span>
                 </div>
                 <div class="file-card-body">
-                    <h4 title="${file.title}">${file.title}</h4>
+                    <h4 title="${fileTitle}">${fileTitle}</h4>
                     <div class="file-card-meta">
                         <span><i class="fas fa-calendar"></i> ${uploadDate}</span>
                         ${fileSize ? `<span><i class="fas ${file.isLink ? 'fa-link' : 'fa-weight-hanging'}"></i> ${fileSize}</span>` : ''}
