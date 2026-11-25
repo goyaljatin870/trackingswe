@@ -110,6 +110,114 @@ const DEFAULTS = {
         { id: 43, title: "Role-based navigation 403 redirect fixes, source deletion on /admin/sources & PWA offline cache", desc: "Fixed 403 Forbidden redirects by routing admin and reviewer users directly to designated dashboards; added source deletion actions on /admin/sources and tuned PWA offline caching.", memberIds: [9], week: 11, status: "Completed", date: "2026-11-23", hours: 6 },
         { id: 44, title: "University scraper resilience (404/410 dead links, scanned PDFs, VTU & DU drive links)", desc: "Hardened scrapers against HTTP 404/410 dead attachments and scanned image PDFs as listing_only/unextractable without poll failure streaks; handled VTU attachment-free posts and DU Google Drive links.", memberIds: [12], week: 11, status: "Completed", date: "2026-11-24", hours: 7 },
         { id: 45, title: "GenericHtmlNoticeAdapter, SQLite WAL cleanup, 291/291 pytest suite passing (100%) & git push", desc: "Built GenericHtmlNoticeAdapter for dynamic institution onboarding, cleaned SQLite WAL files, verified 100% test pass rate (291/291 tests in 5.41s), and tagged Release Candidate v1.0-RC on GitHub.", memberIds: [11], week: 11, status: "Completed", date: "2026-11-25", hours: 7 },
+    ],
+    presentations: [
+        {
+            docId: "EkTY4GyWuQvNGBGengI2",
+            id: "EkTY4GyWuQvNGBGengI2",
+            title: "FinalSay Presentation Final",
+            fileName: "FInal Say Presentation.pdf",
+            fileUrl: "https://goyaljatin870.github.io/trackingswe/uploads/presentations/1795578219472_FInal_Say_Presentation.pdf",
+            cdnUrl: "https://cdn.jsdelivr.net/gh/goyaljatin870/trackingswe@main/uploads/presentations/1795578219472_FInal_Say_Presentation.pdf",
+            githubPath: "uploads/presentations/1795578219472_FInal_Say_Presentation.pdf",
+            githubHtmlUrl: "https://github.com/goyaljatin870/trackingswe/blob/main/uploads/presentations/1795578219472_FInal_Say_Presentation.pdf",
+            fileSize: 5114291,
+            storageType: "github",
+            uploadDate: "2026-11-25T03:43:44.422Z"
+        },
+        {
+            docId: "BzowVFhWmBNA22PAgUMi",
+            id: "BzowVFhWmBNA22PAgUMi",
+            title: "FinalSay Project Pitch",
+            fileName: "FinalSay Project Pitch.pdf",
+            fileUrl: "https://goyaljatin870.github.io/trackingswe/uploads/presentations/1789630574621_FinalSay_Project_Pitch.pdf",
+            cdnUrl: "https://cdn.jsdelivr.net/gh/goyaljatin870/trackingswe@main/uploads/presentations/1789630574621_FinalSay_Project_Pitch.pdf",
+            githubPath: "uploads/presentations/1789630574621_FinalSay_Project_Pitch.pdf",
+            githubHtmlUrl: "https://github.com/goyaljatin870/trackingswe/blob/main/uploads/presentations/1789630574621_FinalSay_Project_Pitch.pdf",
+            fileSize: 4998747,
+            storageType: "github",
+            uploadDate: "2026-09-17T07:37:14.103Z"
+        },
+        {
+            docId: "80IsYIIybppUSYTHPsAH",
+            id: "80IsYIIybppUSYTHPsAH",
+            title: "FinalSay Presentation 2",
+            fileName: "FinalSay_Presentation_2.pptx",
+            fileUrl: "https://goyaljatin870.github.io/trackingswe/uploads/presentations/1789630724062_FinalSay_Presentation_2.pptx",
+            cdnUrl: "https://cdn.jsdelivr.net/gh/goyaljatin870/trackingswe@main/uploads/presentations/1789630724062_FinalSay_Presentation_2.pptx",
+            githubPath: "uploads/presentations/1789630724062_FinalSay_Presentation_2.pptx",
+            githubHtmlUrl: "https://github.com/goyaljatin870/trackingswe/blob/main/uploads/presentations/1789630724062_FinalSay_Presentation_2.pptx",
+            fileSize: 3877009,
+            storageType: "github",
+            uploadDate: "2026-09-17T07:39:11.771Z"
+        },
+        {
+            docId: "wLXWjTgy0mAteO0UEhgP",
+            id: "wLXWjTgy0mAteO0UEhgP",
+            title: "Netra Pitch",
+            fileName: "Netra Pitch.pptx",
+            fileUrl: "https://goyaljatin870.github.io/trackingswe/uploads/presentations/1789630422896_Netra_Pitch.pptx",
+            cdnUrl: "https://cdn.jsdelivr.net/gh/goyaljatin870/trackingswe@main/uploads/presentations/1789630422896_Netra_Pitch.pptx",
+            githubPath: "uploads/presentations/1789630422896_Netra_Pitch.pptx",
+            githubHtmlUrl: "https://github.com/goyaljatin870/trackingswe/blob/main/uploads/presentations/1789630422896_Netra_Pitch.pptx",
+            fileSize: 4188034,
+            storageType: "github",
+            uploadDate: "2026-09-17T07:34:32.776Z"
+        }
+    ],
+    reports: [
+        {
+            docId: "finalsay_progress_report_sep20_nov25",
+            id: "finalsay_progress_report_sep20_nov25",
+            title: "FinalSay — Engineering Progress & Delivery Report (Sep 20 – Nov 25)",
+            fileName: "FinalSay_Progress_Report_Sep20_Nov25.pdf",
+            fileUrl: "https://goyaljatin870.github.io/trackingswe/uploads/reports/FinalSay_Progress_Report_Sep20_Nov25.pdf",
+            cdnUrl: "https://cdn.jsdelivr.net/gh/goyaljatin870/trackingswe@main/uploads/reports/FinalSay_Progress_Report_Sep20_Nov25.pdf",
+            githubPath: "uploads/reports/FinalSay_Progress_Report_Sep20_Nov25.pdf",
+            githubHtmlUrl: "https://github.com/goyaljatin870/trackingswe/blob/main/uploads/reports/FinalSay_Progress_Report_Sep20_Nov25.pdf",
+            fileSize: 13483,
+            storageType: "github",
+            uploadDate: "2026-11-25T09:20:00.000Z"
+        },
+        {
+            docId: "aqpbernikrxFpFaG9eMt",
+            id: "aqpbernikrxFpFaG9eMt",
+            title: "Final Say Report Final",
+            fileName: "Final Say Report.docx",
+            fileUrl: "https://goyaljatin870.github.io/trackingswe/uploads/reports/1795578193577_Final_Say_Report.docx",
+            cdnUrl: "https://cdn.jsdelivr.net/gh/goyaljatin870/trackingswe@main/uploads/reports/1795578193577_Final_Say_Report.docx",
+            githubPath: "uploads/reports/1795578193577_Final_Say_Report.docx",
+            githubHtmlUrl: "https://github.com/goyaljatin870/trackingswe/blob/main/uploads/reports/1795578193577_Final_Say_Report.docx",
+            fileSize: 1046441,
+            storageType: "github",
+            uploadDate: "2026-11-25T03:43:16.957Z"
+        },
+        {
+            docId: "QCLPAtGaVD4EVNyWFDE1",
+            id: "QCLPAtGaVD4EVNyWFDE1",
+            title: "Final Say Report",
+            fileName: "Final Say Report.docx",
+            fileUrl: "https://goyaljatin870.github.io/trackingswe/uploads/reports/1795579867010_Final_Say_Report.docx",
+            cdnUrl: "https://cdn.jsdelivr.net/gh/goyaljatin870/trackingswe@main/uploads/reports/1795579867010_Final_Say_Report.docx",
+            githubPath: "uploads/reports/1795579867010_Final_Say_Report.docx",
+            githubHtmlUrl: "https://github.com/goyaljatin870/trackingswe/blob/main/uploads/reports/1795579867010_Final_Say_Report.docx",
+            fileSize: 1046441,
+            storageType: "github",
+            uploadDate: "2026-11-25T04:11:09.291Z"
+        },
+        {
+            docId: "2V4FUVMJA7bd6pU8Ls9t",
+            id: "2V4FUVMJA7bd6pU8Ls9t",
+            title: "FinalSay Report",
+            fileName: "FinalSay Report.pdf",
+            fileUrl: "https://goyaljatin870.github.io/trackingswe/uploads/reports/1789630770220_FinalSay_Report.pdf",
+            cdnUrl: "https://cdn.jsdelivr.net/gh/goyaljatin870/trackingswe@main/uploads/reports/1789630770220_FinalSay_Report.pdf",
+            githubPath: "uploads/reports/1789630770220_FinalSay_Report.pdf",
+            githubHtmlUrl: "https://github.com/goyaljatin870/trackingswe/blob/main/uploads/reports/1789630770220_FinalSay_Report.pdf",
+            fileSize: 1181947,
+            storageType: "github",
+            uploadDate: "2026-09-17T07:39:37.459Z"
+        }
     ]
 };
 
@@ -118,8 +226,10 @@ let currentRole = null;       // 'admin' | 'member' | 'public'
 let currentMemberId = null;
 let members = [];
 let progressEntries = [];
-let presentations = [];
-let reports = [];
+let presentations = [...DEFAULTS.presentations];
+let reports = [...DEFAULTS.reports];
+let presentationsLoaded = false;
+let reportsLoaded = false;
 let selectedMemberIds = [];
 let selectedFile = null;
 let db = null;
@@ -261,20 +371,30 @@ function setupRealtimeListeners() {
 
     // Presentations listener
     db.collection('presentations').onSnapshot(snapshot => {
-        presentations = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
-        presentations.sort((a, b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+        if (!snapshot.empty) {
+            presentations = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+            presentations.sort((a, b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+        }
+        presentationsLoaded = true;
         if (currentRole) renderFiles('presentations');
     }, err => {
         console.error('Presentations listener error:', err);
+        presentationsLoaded = true;
+        if (currentRole) renderFiles('presentations');
     });
 
     // Reports listener
     db.collection('reports').onSnapshot(snapshot => {
-        reports = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
-        reports.sort((a, b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+        if (!snapshot.empty) {
+            reports = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+            reports.sort((a, b) => new Date(b.uploadDate || 0) - new Date(a.uploadDate || 0));
+        }
+        reportsLoaded = true;
         if (currentRole) renderFiles('reports');
     }, err => {
         console.error('Reports listener error:', err);
+        reportsLoaded = true;
+        if (currentRole) renderFiles('reports');
     });
 }
 
@@ -519,6 +639,8 @@ function buildNavigation() {
             document.getElementById(`section-${li.dataset.section}`).classList.add('active');
             document.getElementById('pageTitle').textContent = li.querySelector('span').textContent;
             document.getElementById('sidebar').classList.remove('mobile-open');
+            if (li.dataset.section === 'presentations') renderFiles('presentations');
+            if (li.dataset.section === 'reports') renderFiles('reports');
         });
     });
     applyRoleVisibility();
@@ -1713,6 +1835,11 @@ function renderFiles(type) {
     const emptyLabel = type === 'presentations' ? 'No presentations uploaded yet' : 'No reports uploaded yet';
 
     if (files.length === 0) {
+        const isLoaded = type === 'presentations' ? presentationsLoaded : reportsLoaded;
+        if (!isLoaded) {
+            grid.innerHTML = `<div class="file-grid-loading" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted);"><i class="fas fa-spinner fa-spin" style="font-size:2rem;margin-bottom:12px;display:block;"></i>Loading ${type}...</div>`;
+            return;
+        }
         grid.innerHTML = `<p class="empty-state" style="grid-column:1/-1;"><i class="fas ${emptyIcon}"></i>${emptyLabel}</p>`;
         return;
     }
@@ -1833,7 +1960,7 @@ function getPublicHttpsUrl(file) {
 // ===== FILE VIEWER (Multi-Engine & Fullscreen) =====
 let currentViewerFile = null;
 let currentViewerType = null;
-let currentViewerEngine = 'office'; // 'office' | 'google'
+let currentViewerEngine = 'google'; // 'google' | 'office' | 'pdfjs' | 'native'
 
 function viewFile(docId, type, startFullscreen = false) {
     const files = type === 'presentations' ? presentations : reports;
@@ -1843,8 +1970,21 @@ function viewFile(docId, type, startFullscreen = false) {
     currentViewerFile = file;
     currentViewerType = type;
     const info = getFileTypeInfo(file.fileName);
-    const ext = file.fileName.split('.').pop().toLowerCase();
+    const ext = (file.fileName || '').split('.').pop().toLowerCase();
+    const isPdf = ext === 'pdf';
     const isOffice = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(ext);
+
+    // Default engine:
+    // PDF -> 'google' (avoids Chrome internal plugin crashes/blocks, renders crisp slides)
+    // Office -> 'office'
+    // Other -> 'native'
+    if (isPdf) {
+        currentViewerEngine = 'google';
+    } else if (isOffice) {
+        currentViewerEngine = 'office';
+    } else {
+        currentViewerEngine = 'native';
+    }
 
     document.getElementById('viewerTitle').textContent = file.title;
     document.getElementById('viewerIcon').className = `fas ${info.icon}`;
@@ -1887,18 +2027,20 @@ function viewFile(docId, type, startFullscreen = false) {
         }
     }
 
-    // Engine toggle (only for Office / PPTX / DOCX files)
+    // Engine toggle (shown for PDF and Office files)
     const engineToggle = document.getElementById('viewerEngineToggle');
+    const btnOffice = document.getElementById('btnEngineOffice');
+    const btnGoogle = document.getElementById('btnEngineGoogle');
+    const btnPdfJs = document.getElementById('btnEnginePdfJs');
+    const btnNative = document.getElementById('btnEngineNative');
+
     if (engineToggle) {
-        if (isOffice && !file.isLink) {
+        if (!file.isLink && (isPdf || isOffice)) {
             engineToggle.style.display = 'inline-flex';
-            // Update active state on buttons
-            const btnOffice = document.getElementById('btnEngineOffice');
-            const btnGoogle = document.getElementById('btnEngineGoogle');
-            if (btnOffice && btnGoogle) {
-                btnOffice.classList.toggle('active', currentViewerEngine === 'office');
-                btnGoogle.classList.toggle('active', currentViewerEngine === 'google');
-            }
+            if (btnOffice) btnOffice.style.display = isOffice ? 'inline-flex' : 'none';
+            if (btnPdfJs) btnPdfJs.style.display = isPdf ? 'inline-flex' : 'none';
+            if (btnGoogle) btnGoogle.style.display = 'inline-flex';
+            if (btnNative) btnNative.style.display = 'inline-flex';
         } else {
             engineToggle.style.display = 'none';
         }
@@ -1910,9 +2052,9 @@ function viewFile(docId, type, startFullscreen = false) {
         loadingEl.classList.remove('hidden');
         const loadText = document.getElementById('viewerLoadingText');
         if (loadText) {
-            loadText.textContent = isOffice
-                ? `Loading presentation preview via ${currentViewerEngine === 'office' ? 'Microsoft Office' : 'Google Docs'}...`
-                : 'Loading document preview...';
+            loadText.textContent = isPdf
+                ? 'Loading presentation preview via Google Docs Viewer...'
+                : (isOffice ? `Loading presentation preview via ${currentViewerEngine === 'office' ? 'Microsoft Office' : 'Google Docs'}...` : 'Loading document preview...');
         }
     }
 
@@ -1929,7 +2071,7 @@ function viewFile(docId, type, startFullscreen = false) {
 function loadViewerIframe(engine) {
     if (!currentViewerFile) return;
     const file = currentViewerFile;
-    const ext = file.fileName.split('.').pop().toLowerCase();
+    const ext = (file.fileName || '').split('.').pop().toLowerCase();
     const iframe = document.getElementById('viewerFrame');
     const directFileUrl = getFileAccessibleUrl(file);
     const publicUrl = getPublicHttpsUrl(file);
@@ -1950,18 +2092,32 @@ function loadViewerIframe(engine) {
         } else {
             embedUrl = targetUrl;
         }
-    } else if (['pdf'].includes(ext)) {
-        // Direct browser PDF renderer with no connection resets
+    } else if (engine === 'google') {
+        // Google Docs Viewer - converts PDF and Office files to HTML5/SVG slides reliably without plugin crashes
+        embedUrl = `https://docs.google.com/gview?url=${encodeURIComponent(publicUrl)}&embedded=true`;
+    } else if (engine === 'pdfjs') {
+        // Mozilla PDF.js HTML5 Canvas Viewer
+        embedUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(publicUrl)}`;
+    } else if (engine === 'office') {
+        // Microsoft Office Online Viewer - PPT, PPTX, DOC, DOCX
+        embedUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`;
+    } else {
+        // Direct browser viewer
         embedUrl = directFileUrl;
-    } else if (['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(ext)) {
-        if (engine === 'office') {
-            // Microsoft Office Online Viewer - uses public HTTPS GitHub Pages URL
-            embedUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`;
-        } else {
-            // Google Docs Viewer alternate - uses public HTTPS GitHub Pages URL
-            embedUrl = `https://docs.google.com/gview?url=${encodeURIComponent(publicUrl)}&embedded=true`;
-        }
     }
+
+    // Update active button state
+    ['Office', 'Google', 'PdfJs', 'Native'].forEach(btnName => {
+        const btn = document.getElementById('btnEngine' + btnName);
+        if (btn) {
+            btn.classList.toggle('active',
+                (btnName === 'Office' && engine === 'office') ||
+                (btnName === 'Google' && engine === 'google') ||
+                (btnName === 'PdfJs' && engine === 'pdfjs') ||
+                (btnName === 'Native' && engine === 'native')
+            );
+        }
+    });
 
     iframe.src = embedUrl;
 
@@ -1974,20 +2130,20 @@ function loadViewerIframe(engine) {
 
 function switchViewerEngine(engine) {
     currentViewerEngine = engine;
-    const btnOffice = document.getElementById('btnEngineOffice');
-    const btnGoogle = document.getElementById('btnEngineGoogle');
 
-    if (btnOffice && btnGoogle) {
-        btnOffice.classList.toggle('active', engine === 'office');
-        btnGoogle.classList.toggle('active', engine === 'google');
-    }
+    const engineLabels = {
+        office: 'Microsoft Office',
+        google: 'Google Docs',
+        pdfjs: 'Mozilla PDF.js',
+        native: 'Direct Browser'
+    };
 
     const loadingEl = document.getElementById('viewerLoading');
     if (loadingEl) {
         loadingEl.classList.remove('hidden');
         const loadText = document.getElementById('viewerLoadingText');
         if (loadText) {
-            loadText.textContent = `Switching to ${engine === 'office' ? 'Microsoft Office' : 'Google Docs'} Viewer...`;
+            loadText.textContent = `Switching to ${engineLabels[engine] || engine} Viewer...`;
         }
     }
 

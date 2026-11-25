@@ -558,13 +558,19 @@
                 <i class="fas fa-file" id="viewerIcon"></i>
                 <span id="viewerTitle">File Viewer</span>
             </div>
-            <!-- Engine Switcher (Office vs Google) -->
+            <!-- Engine Switcher (Google vs Office vs PDF.js vs Direct) -->
             <div class="viewer-engine-toggle" id="viewerEngineToggle" style="display:none;">
-                <button type="button" class="engine-btn active" id="btnEngineOffice" onclick="switchViewerEngine('office')">
+                <button type="button" class="engine-btn" id="btnEngineGoogle" onclick="switchViewerEngine('google')" title="Google Docs / Slides Viewer (HTML5/SVG)">
+                    <i class="fab fa-google"></i> Google
+                </button>
+                <button type="button" class="engine-btn" id="btnEngineOffice" onclick="switchViewerEngine('office')" title="Microsoft Office Online Viewer">
                     <i class="fab fa-microsoft"></i> Office
                 </button>
-                <button type="button" class="engine-btn" id="btnEngineGoogle" onclick="switchViewerEngine('google')">
-                    <i class="fab fa-google"></i> Google
+                <button type="button" class="engine-btn" id="btnEnginePdfJs" onclick="switchViewerEngine('pdfjs')" title="Mozilla PDF.js HTML5 Viewer">
+                    <i class="fas fa-file-pdf"></i> PDF.js
+                </button>
+                <button type="button" class="engine-btn" id="btnEngineNative" onclick="switchViewerEngine('native')" title="Direct Browser Native Viewer">
+                    <i class="fas fa-desktop"></i> Direct
                 </button>
             </div>
             <div class="viewer-actions">
