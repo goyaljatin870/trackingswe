@@ -432,6 +432,10 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initMobileToggle();
     initClickOutsideMultiSelect();
+    const iframe = document.getElementById('viewerFrame');
+    if (iframe) {
+        iframe.addEventListener('load', onViewerIframeLoad);
+    }
 });
 
 // ===== Auth: Tab Switching =====
